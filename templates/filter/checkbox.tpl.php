@@ -1,0 +1,1 @@
+<input name="<?php echo string_attribute( $t_field->field ) ?>" type="checkbox" <?php echo ( $t_field->size > 0 ? " size=\"$t_field->size\"" : '' ) ?> <?php echo ( (bool) $t_field->filter_value ) ? ' checked="checked" ' : ''; ?> />
