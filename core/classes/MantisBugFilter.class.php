@@ -428,12 +428,23 @@ class MantisBugFilter {
 	 *	@param string $p_table The top level table to retrieve joins for.
 	 *	@return string An sql table join string
 	 */
-	public function getTableJoins( $p_table ) {
-		$t_join_string = ' ';
-		if( array_key_exists( $p_table, $this->join_clauses ) ) {
-			foreach( $this->join_clauses[$p_table] AS $t_join_table=>$t_join_arr ) {
-				foreach( $t_join_arr AS $t_join_string ) { 
-					$t_join_string .= ' ' . $this->getTableJoins( $t_join_table ) . "\n";
+	public function getTableJoins( $p_table, $p_join_clauses ) {
+		$t_join_string = '';
+		if( is_array( $p_join_clauses ) && array_key_exists( $p_table, $p_join_clauses ) ) {
+			# t_key is a nested table
+			foreach( $p_join_clauses[$p_table] AS $t_key=>$t_join_arr ) {
+				$t_join_string .= ' ' . $this->getTableJoins( $t_key, $t_join_arr ) . "\n";
+			}
+		} else {
+			if( is_array( $p_join_clauses ) ) {
+				foreach( $p_join_clauses AS $t_key=>$t_join_arr ) {
+					# this is an array of join strings
+					if( is_numeric( $t_key ) ) {
+						return join( ' ', $p_join_clauses );
+					} else {
+						# the requested table is not in the array.
+						return '';
+					}
 				}
 			}
 		}
@@ -450,10 +461,25 @@ class MantisBugFilter {
 	public function uniqueQueryClauses() {
 		$this->select_clauses = array_unique( $this->select_clauses );
 		$this->from_clauses = array_unique( $this->from_clauses );
+		$this->join_clauses = $this->uniqueJoinClauses( $this->join_clauses );
+	}
 
-		foreach( $this->join_clauses AS $t_table => $t_clauses ) {
-			$this->join_clauses[$t_table] = array_unique( $t_clauses );
+	public function uniqueJoinClauses( $p_join_clauses ) {
+		$t_joins = array();
+		if( is_array( $p_join_clauses ) ) {
+			foreach( $p_join_clauses AS $t_table => $t_clauses ) {
+				if( is_numeric( $t_table ) ) {
+					# p_join_clauses is an array of join strings without a table name. unique the entire thing and
+					# skip the foreach
+					$t_joins = array_unique( $p_join_clauses );
+					break;
+				} else if( is_array( $t_clauses ) ) {
+					# The key is another table name, get unique nested joins.
+					$t_joins[$t_table] = $this->uniqueJoinClauses( $t_clauses );
+				}
+			}
 		}
+		return $t_joins;
 	}
 
 	/**
@@ -466,12 +492,13 @@ class MantisBugFilter {
 		$t_select_string = "SELECT Count( DISTINCT {$this->tables['bug']}.id ) as idcnt ";
 		$t_from_string = " FROM ";
 		$t_first = true;
+
 		foreach( $this->from_clauses AS $t_table ) {
 			if( !$t_first ) {
 				$t_from_string .= ", ";
 			}
-			$t_from_string .= "$t_table ";
-			$t_from_string .= $this->getTableJoins( $t_table );
+			$t_from_string .= "$t_table";
+			$t_from_string .= $this->getTableJoins( $t_table, $this->join_clauses );
 			$t_first = false;
 		}
 
@@ -537,10 +564,10 @@ class MantisBugFilter {
 		$t_first = true;
 		foreach( $this->from_clauses AS $t_table ) {
 			if( !$t_first ) {
-				$t_from_string .= ", ";
+				$t_from_string .= ",";
 			}
 			$t_from_string .= "$t_table ";
-			$t_from_string .= $this->getTableJoins( $t_table );
+			$t_from_string .= $this->getTableJoins( $t_table, $this->join_clauses );
 			$t_first = false;
 		}
 

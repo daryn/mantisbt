@@ -70,17 +70,22 @@ class MantisFilterRelationship extends MantisFilterString {
 			$t_comp_type = relationship_get_complementary_type( $this->relationship_type );
 			$t_clauses = array();
 			$t_alias = 'relationship';
-
 			/* @todo... don't think this is going to work correctly */
 			if( $this->relationship_type > 0 && $this->relationship_bug == 0 ) {
 				# query for all bugs with the selected relationship
-				$t_filter->addQueryElement( 'join_clauses',  "LEFT JOIN {$t_filter->tables['bug_relationship']} $t_alias ON {$t_filter->tables['bug']}.id = $t_alias.destination_bug_id AND $t_alias.relationship_type=" . $t_comp_type );
-				$t_filter->addQueryElement( 'join_clauses',  "LEFT JOIN {$t_filter->tables['bug_relationship']} ${t_alias}2 ON {$t_filter->tables['bug']}.id = ${t_alias}2.source_bug_id AND {$t_alias}2.relationship_type=" . $this->relationship_type );
+				$t_join_string = "LEFT JOIN {$t_filter->tables['bug_relationship']} $t_alias ON {$t_filter->tables['bug']}.id = $t_alias.destination_bug_id AND $t_alias.relationship_type=" . $t_comp_type;
+				$t_filter->addTableJoin( $t_filter->tables['bug'], $t_alias, $t_join_string );
+
+				$t_join_string = "LEFT JOIN {$t_filter->tables['bug_relationship']} ${t_alias}2 ON {$t_filter->tables['bug']}.id = ${t_alias}2.source_bug_id AND {$t_alias}2.relationship_type=" . $this->relationship_type;
+				$t_filter->addTableJoin( $t_filter->tables['bug'], $t_alias . '2', $t_join_string );
 			} else if( $this->relationship_type == 0 && is_numeric( $this->relationship_bug ) && $this->relationship_bug > 0 ) {
 
 			} else {
-				$t_filter->addQueryElement( 'join_clauses',  "LEFT JOIN {$t_filter->tables['bug_relationship']} $t_alias ON {$t_filter->tables['bug']}.id = $t_alias.destination_bug_id" );
-				$t_filter->addQueryElement( 'join_clauses',  "LEFT JOIN {$t_filter->tables['bug_relationship']} ${t_alias}2 ON {$t_filter->tables['bug']}.id = ${t_alias}2.source_bug_id" );
+				$t_join_string = "LEFT JOIN {$t_filter->tables['bug_relationship']} $t_alias ON {$t_filter->tables['bug']}.id = $t_alias.destination_bug_id";
+				$t_filter->addTableJoin( $t_filter->tables['bug'], $t_alias, $t_join_string );
+				$t_join_string = "LEFT JOIN {$t_filter->tables['bug_relationship']} ${t_alias}2 ON {$t_filter->tables['bug']}.id = ${t_alias}2.source_bug_id";
+				$t_filter->addTableJoin( $t_filter->tables['bug'], $t_alias . '2', $t_join_string );
+
 				// get reverse relationships
 				$t_filter->addQueryElement( 'where_params', $t_comp_type );
 				$t_filter->addQueryElement( 'where_params', $this->relationship_bug );

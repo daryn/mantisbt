@@ -148,8 +148,7 @@ class MantisFilterUser extends MantisFilterMultiInt {
 		$t_alias = $this->field . '_user';
 		$t_filter->addQueryElement( 'select_clauses', "$t_alias.$t_sort_field");
 		$t_join_string = "LEFT JOIN {$t_filter->tables['user']} $t_alias ON {$t_filter->tables['bug']}.{$this->field} = $t_alias.id ";
-		$t_filter->addQueryElement( 'join_clauses', $t_join_string );
-
+		$t_filter->addTableJoin( $t_filter->tables['bug'], $t_alias, $t_join_string );
 		$t_filter->addQueryElement( 'order_clauses', "$t_alias.$t_sort_field $t_dir" );
 	}
 }

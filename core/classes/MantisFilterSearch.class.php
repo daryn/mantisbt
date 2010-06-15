@@ -99,9 +99,7 @@ class MantisFilterSearch extends MantisFilterString {
 				$t_filter->addQueryElement('where_clauses', "$t_bug_table.bug_text_id = $t_bug_text_table.id" );
 				$t_filter->addQueryElement('where_clauses', $t_textsearch_where_clause );
 				$t_filter->addTableJoin( $t_bug_table, $t_bugnote_table, " LEFT JOIN $t_bugnote_table ON $t_bug_table.id = $t_bugnote_table.bug_id" );
-#				$t_filter->addQueryElement('join_clauses', " LEFT JOIN $t_bugnote_table ON $t_bug_table.id = $t_bugnote_table.bug_id" );
 				$t_filter->addTableJoin( $t_bugnote_table, $t_bugnote_text_table, " LEFT JOIN $t_bugnote_text_table ON $t_bugnote_table.bugnote_text_id = $t_bugnote_text_table.id", "$t_bugnote_table" );
-#				$t_filter->addQueryElement('join_clauses', " LEFT JOIN $t_bugnote_text_table ON $t_bugnote_table.bugnote_text_id = $t_bugnote_text_table.id", "$t_bugnote_table" );
 			}
 		}
 	}

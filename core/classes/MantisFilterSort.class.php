@@ -220,24 +220,16 @@ class MantisFilterSort extends MantisFilter {
 				}
 				$t_field = $t_filter->getField( 'custom_field_'. $t_custom_field_id );
 				$t_field->sortParams();	
-			#	$t_cf_alias = str_replace( ' ', '_', $t_custom_field );
-			#	$t_cf_table_alias = 'cf_string' . $t_custom_field_id;
-			#	$t_cf_select = "$t_cf_table_alias.value $t_cf_alias";
-
-			#	$t_select_clauses = $t_filter->select_clauses;
-				# check to be sure this field wasn't already added to the query.
-			#	if( !in_array( $t_cf_select, $t_select_clauses ) ) {
-			#		$t_filter->addQueryElement( 'select_clauses', $t_cf_select ); 
-			#		$t_filter->addQueryElement( 'join_clauses', "LEFT JOIN {$t_filter->tables['cf_string']} $t_cf_table_alias ON {$t_filter->tables['bug']}.id  = $t_cf_table_alias.bug_id AND $t_cf_table_alias.field_id = $t_custom_field_id" );
-			#	}
-			#	$t_filter->addQueryElement( 'order_clauses', "$t_cf_alias $t_dir" ); #@todo this might need the table alias also
 			} else if ( isset( $t_plugin_columns[ $t_sort ] ) ) {
 				$t_column_object = $t_plugin_columns[ $t_sort ];
 				if ( $t_column_object->sortable ) {
 					$t_clauses = $t_column_object->sortquery( $t_dir );
 					if ( is_array( $t_clauses ) ) {
 						if ( isset( $t_clauses['join'] ) ) {
-							$t_filter->addQueryElement( 'join_clauses', $t_clauses['join'] ); 
+							/**
+							 *	@todo this needs to use a sortParams() function to set proper sort query data
+							 */
+							# $t_filter->addQueryElement( 'join_clauses', $t_clauses['join'] );
 						}
 						if ( isset( $t_clauses['order'] ) ) {
 							$t_filter->addQueryElement( 'order_clauses', $t_clauses['order'] ); 
