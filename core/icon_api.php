@@ -63,26 +63,14 @@ function print_status_icon( $p_icon ) {
 
 /**
  * The input $p_dir is either ASC or DESC
- * The inputs $p_sort_by and $p_field are compared to see if they match
- * If the fields match then the sort icon is printed
- * This is a convenience feature to push the comparison code into this
- * function instead of in the page(s)
- * $p_field is a constant and $p_sort_by is whatever the page happens to
- * be sorting by at the moment
- * Multiple sort keys are not supported
  * @param int $p_dir
- * @param string $p_sort_by
- * @param string $p_field
  * @return null
  * @access public
  */
-function print_sort_icon( $p_dir, $p_sort_by, $p_field ) {
+#function print_sort_icon( $p_dir, $p_sort_by, $p_field ) {
+function print_sort_icon( $p_dir ) {
 	$t_icon_path = config_get( 'icon_path' );
 	$t_sort_icon_arr = config_get( 'sort_icon_arr' );
-
-	if( $p_sort_by != $p_field ) {
-		return;
-	}
 
 	if(( 'DESC' == $p_dir ) || ( DESCENDING == $p_dir ) ) {
 		$t_dir = DESCENDING;
