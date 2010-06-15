@@ -28,9 +28,17 @@
     define( 'FILTER_PROPERTY_SEARCH', 'search' );
     define( 'FILTER_PROPERTY_HIGHLIGHT_CHANGED', 'highlight_changed' );
     define( 'FILTER_PROPERTY_HIDE_STATUS', 'hide_status' ); # hide_status
+    define( 'FILTER_PROPERTY_SORT', 'sort_fields' );
     define( 'FILTER_PROPERTY_SORT_FIELD_NAME', 'sort' );
     define( 'FILTER_PROPERTY_SORT_DIRECTION', 'dir' );
     define( 'FILTER_PROPERTY_ISSUES_PER_PAGE', 'per_page' ); # ?
+    define( 'FILTER_PROPERTY_DATE_SUBMITTED', 'date_submitted' );
+    define( 'FILTER_PROPERTY_DUE_DATE', 'due_date' );
+    define( 'FILTER_PROPERTY_LAST_UPDATED', 'last_updated' );
+    define( 'FILTER_PROPERTY_START_DATE', 'start_date' );
+    define( 'FILTER_PROPERTY_END_DATE', 'end_date' );
+
+
     define( 'FILTER_PROPERTY_START_DAY', 'start_day' );
     define( 'FILTER_PROPERTY_START_MONTH', 'start_month' );
     define( 'FILTER_PROPERTY_START_YEAR', 'start_year' );
@@ -38,6 +46,7 @@
     define( 'FILTER_PROPERTY_END_MONTH', 'end_month' );
     define( 'FILTER_PROPERTY_END_YEAR', 'end_year' );
     define( 'FILTER_PROPERTY_FILTER_BY_DATE', 'filter_by_date' ); #do_filter_by_date
+
     define( 'FILTER_PROPERTY_RELATIONSHIP_TYPE', 'relationship_type' );
     define( 'FILTER_PROPERTY_RELATIONSHIP_BUG', 'relationship_bug' );
     define( 'FILTER_PROPERTY_TAG_STRING', 'tag_string' );
