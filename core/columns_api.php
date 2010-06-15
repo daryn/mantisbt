@@ -1018,7 +1018,8 @@ function print_column_sponsorship_total( $p_bug, $p_columns_target = COLUMNS_TAR
  * @access public
  */
 function print_column_bugnotes_count( $p_bug, $p_columns_target = COLUMNS_TARGET_VIEW_PAGE ) {
-	global $t_filter;
+	$t_filter = MantisBugFilter::loadCurrent();
+	$t_changed_field = $t_filter->getField( FILTER_PROPERTY_HIGHLIGHT_CHANGED );
 
 	# grab the bugnote count
 	$t_bugnote_stats = bug_get_bugnote_stats( $p_bug->id );
@@ -1031,7 +1032,7 @@ function print_column_bugnotes_count( $p_bug, $p_columns_target = COLUMNS_TARGET
 
 	echo '<td class="center column-bugnotes-count">';
 	if( $bugnote_count > 0 ) {
-		$t_show_in_bold = $v_bugnote_updated > strtotime( '-' . $t_filter[FILTER_PROPERTY_HIGHLIGHT_CHANGED] . ' hours' );
+		$t_show_in_bold = $v_bugnote_updated > strtotime( '-' . $t_changed_field->filter_value . ' hours' );
 		if( $t_show_in_bold ) {
 			echo '<span class="bold">';
 		}
@@ -1235,12 +1236,13 @@ function print_column_project_id( $p_bug, $p_columns_target = COLUMNS_TARGET_VIE
  * @access public
  */
 function print_column_last_updated( $p_bug, $p_columns_target = COLUMNS_TARGET_VIEW_PAGE ) {
-	global $t_filter;
+	$t_filter = MantisBugFilter::loadCurrent();
+	$t_changed_field = $t_filter->getField( FILTER_PROPERTY_HIGHLIGHT_CHANGED );
 
 	$t_last_updated = string_display_line( date( config_get( 'short_date_format' ), $p_bug->last_updated ) );
 
 	echo '<td class="center column-last-modified">';
-	if( $p_bug->last_updated > strtotime( '-' . $t_filter[FILTER_PROPERTY_HIGHLIGHT_CHANGED] . ' hours' ) ) {
+	if( $p_bug->last_updated > strtotime( '-' . $t_changed_field->filter_value . ' hours' ) ) {
 		printf( '<span class="bold">%s</span>', $t_last_updated );
 	} else {
 		echo $t_last_updated;

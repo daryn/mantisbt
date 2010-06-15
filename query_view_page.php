@@ -25,7 +25,6 @@
  * @uses compress_api.php
  * @uses config_api.php
  * @uses database_api.php
- * @uses filter_api.php
  * @uses helper_api.php
  * @uses html_api.php
  * @uses lang_api.php
@@ -38,7 +37,6 @@ require_api( 'authentication_api.php' );
 require_api( 'compress_api.php' );
 require_api( 'config_api.php' );
 require_api( 'database_api.php' );
-require_api( 'filter_api.php' );
 require_api( 'helper_api.php' );
 require_api( 'html_api.php' );
 require_api( 'lang_api.php' );
@@ -47,7 +45,7 @@ require_api( 'rss_api.php' );
 
 auth_ensure_user_authenticated();
 
-$t_query_arr = filter_db_get_available_queries();
+$t_query_arr = MantisBugFilter::getAvailable();
 
 # Special case: if we've deleted our last query, we have nothing to show here.
 if ( count( $t_query_arr ) < 1 ) {
@@ -62,12 +60,12 @@ $t_rss_enabled = config_get( 'rss_enabled' );
 ?>
 <br />
 <div align="center">
-<table class="width75" cellspacing="0">
+<table class="width75" cellspacing="1">
 <?php
 $t_column_count = 0;
 $t_max_column_count = 2;
 
-foreach( $t_query_arr as $t_id => $t_name ) {
+foreach( $t_query_arr as $t_id => $t_bug_filter ) {
 	if ( $t_column_count == 0 ) {
 		print '<tr ' . helper_alternate_class() . '>';
 	}
@@ -80,12 +78,11 @@ foreach( $t_query_arr as $t_id => $t_name ) {
 		echo ' ';
 	}
 
-	$t_query_id = db_prepare_int( $t_id );
-	print_link( "view_all_set.php?type=3&source_query_id=$t_query_id", $t_name );
+	print_link( "view_all_set.php?type=3&source_query_id=$t_id", $t_bug_filter->name );
 
-	if ( filter_db_can_delete_filter( $t_id ) ) {
+	if ( $t_bug_filter->canDelete() ) {
 		echo ' ';
-		print_button( "query_delete_page.php?source_query_id=$t_query_id", lang_get( 'delete_query' ) );
+		print_button( "query_delete_page.php?source_query_id=$t_id", lang_get( 'delete_query' ) );
 	}
 
 	print '</td>';

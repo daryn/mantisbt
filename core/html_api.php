@@ -66,8 +66,6 @@
  * @uses error_api.php
  * @uses event_api.php
  * @uses file_api.php
- * @uses filter_api.php
- * @uses filter_constants_inc.php
  * @uses form_api.php
  * @uses helper_api.php
  * @uses lang_api.php
@@ -91,8 +89,6 @@ require_api( 'database_api.php' );
 require_api( 'error_api.php' );
 require_api( 'event_api.php' );
 require_api( 'file_api.php' );
-require_api( 'filter_api.php' );
-require_api( 'filter_constants_inc.php' );
 require_api( 'form_api.php' );
 require_api( 'helper_api.php' );
 require_api( 'lang_api.php' );
@@ -1268,13 +1264,13 @@ function print_summary_menu( $p_page = '' ) {
  */
 function html_status_legend() {
 	# Don't show the legend if only one status is selected by the current filter
-	$t_current_filter = current_user_get_bug_filter();
-	if ( $t_current_filter === false ) {
-		$t_current_filter = filter_get_default();
-	}
-	$t_simple_filter = $t_current_filter['_view_type'] == 'simple';
+	$t_current_filter = MantisBugFilter::loadCurrent();
+	$t_status_field = $t_current_filter->getField( FILTER_PROPERTY_STATUS );
+	$t_hide_status = $t_current_filter->getField( FILTER_PROPERTY_HIDE_STATUS );
+	$t_view_type = $t_current_filter->getField( '_view_type' );
+	$t_simple_filter = $t_view_type->filter_value == 'simple';
 	if( $t_simple_filter ) {
-		if( !filter_field_is_any( $t_current_filter[FILTER_PROPERTY_STATUS][0] ) ) {
+		if( !$t_status_field->isAny() ) {
 			return null;
 		}
 	}
@@ -1299,13 +1295,13 @@ function html_status_legend() {
 	# Remove status values that won't appear as a result of the current filter
 	foreach( $t_status_array as $t_status => $t_name ) {
 		if( $t_simple_filter ) {
-			if( !filter_field_is_none( $t_current_filter[FILTER_PROPERTY_HIDE_STATUS][0] ) &&
-				$t_status >= $t_current_filter[FILTER_PROPERTY_HIDE_STATUS][0] ) {
+			if( !$t_hide_status->isNone() &&
+				$t_status >= $t_hide_status->filter_value ) {
 				unset( $t_status_array[$t_status] );
 			}
 		} else {
-			if( !in_array( META_FILTER_ANY, $t_current_filter[FILTER_PROPERTY_STATUS] ) &&
-				!in_array( $t_status, $t_current_filter[FILTER_PROPERTY_STATUS] ) ) {
+			if( !in_array( META_FILTER_ANY, $t_status_field->filter_value ) &&
+				!in_array( $t_status, $t_status_field->filter_value ) ) {
 				unset( $t_status_array[$t_status] );
 			}
 		}

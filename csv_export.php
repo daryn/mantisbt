@@ -26,7 +26,6 @@
  * @uses constant_inc.php
  * @uses csv_api.php
  * @uses file_api.php
- * @uses filter_api.php
  * @uses helper_api.php
  * @uses print_api.php
  */
@@ -37,7 +36,6 @@ require_api( 'columns_api.php' );
 require_api( 'constant_inc.php' );
 require_api( 'csv_api.php' );
 require_api( 'file_api.php' );
-require_api( 'filter_api.php' );
 require_api( 'helper_api.php' );
 require_api( 'print_api.php' );
 
@@ -45,16 +43,17 @@ auth_ensure_user_authenticated();
 
 helper_begin_long_process();
 
-$t_page_number = 1;
-$t_per_page = -1;
-$t_bug_count = null;
-$t_page_count = null;
-
 $t_nl = csv_get_newline();
 $t_sep = csv_get_separator();
 
+$t_filter = MantisBugFilter::loadCurrent();
+$t_filter->page_number = 1;
+$t_per_page_field = $t_filter->getField( FILTER_PROPERTY_ISSUES_PER_PAGE );
+$t_per_page_field->filter_value = -1;
+
 # Get bug rows according to the current filter
-$t_rows = filter_get_bug_rows( $t_page_number, $t_per_page, $t_page_count, $t_bug_count );
+$t_rows = $t_filter->execute();
+
 if ( $t_rows === false ) {
 	print_header_redirect( 'view_all_set.php?type=0' );
 }

@@ -25,7 +25,6 @@
  * @uses compress_api.php
  * @uses config_api.php
  * @uses current_user_api.php
- * @uses filter_api.php
  * @uses gpc_api.php
  * @uses html_api.php
  * @uses lang_api.php
@@ -39,7 +38,6 @@ require_api( 'authentication_api.php' );
 require_api( 'compress_api.php' );
 require_api( 'config_api.php' );
 require_api( 'current_user_api.php' );
-require_api( 'filter_api.php' );
 require_api( 'gpc_api.php' );
 require_api( 'html_api.php' );
 require_api( 'lang_api.php' );
@@ -50,24 +48,28 @@ require_api( 'user_api.php' );
 auth_ensure_user_authenticated();
 
 $f_page_number		= gpc_get_int( 'page_number', 1 );
-
+$f_load_filters		= gpc_get_bool( 'load_fields' );
 $t_per_page = null;
 $t_bug_count = null;
 $t_page_count = null;
 
-$rows = filter_get_bug_rows( $f_page_number, $t_per_page, $t_page_count, $t_bug_count, null, null, null, true );
-if ( $rows === false ) {
+$t_filter = MantisBugFilter::loadCurrent();
+$t_filter->page_number = $f_page_number;
+
+$t_rows = $t_filter->execute();
+
+$t_row_count = count( $t_rows );
+if ( $t_rows === false ) {
 	print_header_redirect( 'view_all_set.php?type=0' );
 }
 
 $t_bugslist = Array();
 $t_users_handlers = Array();
 $t_project_ids  = Array();
-$t_row_count = count( $rows );
 for($i=0; $i < $t_row_count; $i++) {
-	array_push($t_bugslist, $rows[$i]->id );
-	$t_users_handlers[] = $rows[$i]->handler_id;
-	$t_project_ids[] = $rows[$i]->project_id;
+	array_push($t_bugslist, $t_rows[$i]->id );
+	$t_users_handlers[] = $t_rows[$i]->handler_id;
+	$t_project_ids[] = $t_rows[$i]->project_id;
 }
 $t_unique_users_handlers = array_unique( $t_users_handlers );
 $t_unique_project_ids = array_unique( $t_project_ids );
@@ -83,7 +85,7 @@ html_robots_noindex();
 
 html_page_top1( lang_get( 'view_bugs_link' ) );
 html_javascript_link( 'bugFilter.js' );
-
+html_css_link( 'filter.css' );
 if ( current_user_get_pref( 'refresh_delay' ) > 0 ) {
 	html_meta_redirect( 'view_all_bug_page.php?page_number='.$f_page_number, current_user_get_pref( 'refresh_delay' )*60 );
 }

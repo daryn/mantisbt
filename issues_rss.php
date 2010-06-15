@@ -35,7 +35,6 @@
  * @uses category_api.php
  * @uses config_api.php
  * @uses constant_inc.php
- * @uses filter_api.php
  * @uses gpc_api.php
  * @uses lang_api.php
  * @uses project_api.php
@@ -51,7 +50,6 @@ require_api( 'bug_api.php' );
 require_api( 'category_api.php' );
 require_api( 'config_api.php' );
 require_api( 'constant_inc.php' );
-require_api( 'filter_api.php' );
 require_api( 'gpc_api.php' );
 require_api( 'lang_api.php' );
 require_api( 'project_api.php' );
@@ -114,9 +112,37 @@ if ( $f_username !== null ) {
 	$title .= " - ($f_username)";
 }
 
-if ( $f_filter_id !== 0 ) {
-	$title .= ' (' . filter_get_field( $f_filter_id, 'name' ) . ')';
+if( $f_filter_id !== 0 ) {
+	$t_filter = MantisBugFilter::getById( $f_filter_id );
+	$title .= ' (' . $t_filter->name . ')';
+} else {
+	$t_filter = MantisBugFilter::loadDefault();
+	$t_sort = $t_filter->getField( FILTER_PROPERTY_SORT );
+	$t_sort->filter_value = array( FILTER_PROPERTY_SORT_FIELD=>$c_sort_field, FILTER_PROPERTY_SORT_DIRECTION=>'' );
+	$t_sort->sort_field =$c_sort_field;
 }
+
+# null will be returned if the user doesn't have access right to access the filter.
+if ( null === $t_filter ) {
+	access_denied();
+}
+
+$t_per_page = $t_filter->getField( FILTER_PROPERTY_ISSUES_PER_PAGE );
+$t_per_page->filter_value = 25;
+$t_sticky = $t_filter->getField( FILTER_PROPERTY_STICKY );
+$t_sticky->filter_value = null;
+$t_project = $t_filter->getField( FILTER_PROPERTY_PROJECT_ID );
+$t_project->filter_value = array( $f_project_id );
+
+if ( $f_username !== null ) {
+	$t_user_id = user_get_id_by_name( $f_username );
+} else {
+	$t_user_id = user_get_id_by_name( config_get( 'anonymous_account' ) );
+}
+$t_filter->filter_user = $t_user_id;
+$t_filter->validate();
+$t_issues = $t_filter->execute();
+$t_issues_count = count( $t_issues );
 
 $description = $title;
 
@@ -158,35 +184,6 @@ $base = (string) date( 'Y-m-d\TH:i:sO' );
 $base = utf8_substr( $base, 0, 22 ) . ':' . utf8_substr( $base, -2 );
 
 $rssfile->addSYdata( $period, $frequency, $base );
-
-$t_page_number = 1;
-$t_issues_per_page = 25;
-$t_page_count = 0;
-$t_issues_count = 0;
-$t_project_id = $f_project_id;
-if ( $f_username !== null ) {
-	$t_user_id = user_get_id_by_name( $f_username );
-} else {
-	$t_user_id = user_get_id_by_name( config_get( 'anonymous_account' ) );
-}
-$t_show_sticky = null;
-
-if ( $f_filter_id == 0 ) {
-	$t_custom_filter = filter_get_default();
-	$t_custom_filter['sort'] = $c_sort_field;
-} else {
-	# null will be returned if the user doesn't have access right to access the filter.
-	$t_custom_filter = filter_db_get_filter( $f_filter_id, $t_user_id );
-	if ( null === $t_custom_filter ) {
-		access_denied();
-	}
-
-	$t_custom_filter = filter_deserialize( $t_custom_filter );
-}
-
-$t_issues = filter_get_bug_rows( $t_page_number, $t_issues_per_page, $t_page_count, $t_issues_count,
-								 $t_custom_filter, $t_project_id, $t_user_id, $t_show_sticky );
-$t_issues_count = count( $t_issues );
 
 # Loop through results
 for ( $i = 0; $i < $t_issues_count; $i++ ) {

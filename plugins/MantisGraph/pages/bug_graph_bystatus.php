@@ -48,16 +48,16 @@
 
 	$f_page_number = 1;
 
-	$t_per_page = 0;
-	$t_bug_count = null;
-	$t_page_count = 0;
-
-	$t_filter = current_user_get_bug_filter();
-    $t_filter['_view_type']	= 'advanced';
-    $t_filter[FILTER_PROPERTY_STATUS] = array(META_FILTER_ANY);
-	$t_filter[FILTER_PROPERTY_SORT_FIELD_NAME] = '';
-	$rows = filter_get_bug_rows( $f_page_number, $t_per_page, $t_page_count, $t_bug_count, $t_filter, null, null, true );
-	if ( count($rows) == 0 ) {
+	$t_filter = MantisBugFilter::loadCurrent();
+	$t_view_type = $t_filter->getField( '_view_type' );
+	$t_view_type->filter_value = 'advanced';
+	$t_status = $t_filter->getField( FILTER_PROPERTY_STATUS );
+	$t_status->filter_value = array(META_FILTER_ANY);
+	$t_sort = $t_filter->getField( FILTER_PROPERTY_SORT );
+	$t_sort->filter_value = '';
+	$t_filter->validate();
+	$t_rows = $t_filter->execute();
+	if ( count($t_rows) == 0 ) {
 		// no data to graph
 		exit();
 	}
@@ -84,7 +84,7 @@
 
 	// walk through all issues and grab their status for 'now'
 	$t_marker[$t_ptr] = time();
-	foreach ($rows as $t_row) {
+	foreach ($t_rows as $t_row) {
 	    if ( isset( $t_data[$t_ptr][$t_row->status] ) ) {
             $t_data[$t_ptr][$t_row->status] ++;
 	    } else {

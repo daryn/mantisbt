@@ -75,7 +75,7 @@ print_recently_visited();
 
 $f_page_number		= gpc_get_int( 'page_number', 1 );
 
-$t_per_page = config_get( 'my_view_bug_count' );
+$t_my_view_bug_count = config_get( 'my_view_bug_count' );
 $t_bug_count = null;
 $t_page_count = null;
 

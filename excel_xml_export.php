@@ -29,7 +29,6 @@
  * @uses config_api.php
  * @uses excel_api.php
  * @uses file_api.php
- * @uses filter_api.php
  * @uses gpc_api.php
  * @uses helper_api.php
  * @uses print_api.php
@@ -43,7 +42,6 @@ require_api( 'columns_api.php' );
 require_api( 'config_api.php' );
 require_api( 'excel_api.php' );
 require_api( 'file_api.php' );
-require_api( 'filter_api.php' );
 require_api( 'gpc_api.php' );
 require_api( 'helper_api.php' );
 require_api( 'print_api.php' );
@@ -65,11 +63,14 @@ $t_short_date_format = config_get( 'short_date_format' );
 # This is where we used to do the entire actual filter ourselves
 $t_page_number = gpc_get_int( 'page_number', 1 );
 $t_per_page = 100;
-$t_bug_count = null;
-$t_page_count = null;
 
-$result = filter_get_bug_rows( $t_page_number, $t_per_page, $t_page_count, $t_bug_count );
-if ( $result === false ) {
+$t_filter = MantisBugFilter::loadCurrent();
+$t_filter->page_number = $t_page_number;
+$t_per_page_field = $t_filter->getField( FILTER_PROPERTY_ISSUES_PER_PAGE );
+$t_per_page_field->filter_value = $t_per_page;
+
+$t_rows = $t_filter->execute();
+if ( $t_rows === false ) {
 	print_header_redirect( 'view_all_set.php?type=0&print=1' );
 }
 
@@ -88,10 +89,10 @@ $t_columns = excel_get_columns();
 do
 {
 	$t_more = true;
-	$t_row_count = count( $result );
+	$t_row_count = count( $t_rows );
 
 	for( $i = 0; $i < $t_row_count; $i++ ) {
-		$t_row = $result[$i];
+		$t_row = $t_rows[$i];
 		$t_bug = null;
 
 		if ( is_blank( $f_export ) || in_array( $t_row->id, $f_bug_arr ) ) {
@@ -124,12 +125,11 @@ do
 	// @@@ Note that since we are not using a transaction, there is a risk that we get a duplicate record or we miss
 	// one due to a submit or update that happens in parallel.
 	if ( $t_row_count == $t_per_page ) {
-		$t_page_number++;
-		$t_bug_count = null;
-		$t_page_count = null;
 
-		$result = filter_get_bug_rows( $t_page_number, $t_per_page, $t_page_count, $t_bug_count );
-		if ( $result === false ) {
+		$t_page_number++;
+		$t_filter->page_number = $t_page_number;
+		$t_rows = $t_filter->execute();
+		if ( $t_rows === false ) {
 			$t_more = false;
 		}
 	} else {

@@ -35,7 +35,6 @@
  * @uses custom_field_api.php
  * @uses date_api.php
  * @uses file_api.php
- * @uses filter_api.php
  * @uses gpc_api.php
  * @uses helper_api.php
  * @uses html_api.php
@@ -59,7 +58,6 @@ require_api( 'constant_inc.php' );
 require_api( 'custom_field_api.php' );
 require_api( 'date_api.php' );
 require_api( 'file_api.php' );
-require_api( 'filter_api.php' );
 require_api( 'gpc_api.php' );
 require_api( 'helper_api.php' );
 require_api( 'html_api.php' );
@@ -97,12 +95,13 @@ if ( $f_type_page != 'html' ) {
 
 # This is where we used to do the entire actual filter ourselves
 $t_page_number = gpc_get_int( 'page_number', 1 );
-$t_per_page = -1;
-$t_bug_count = null;
-$t_page_count = null;
 
-$result = filter_get_bug_rows( $t_page_number, $t_per_page, $t_page_count, $t_bug_count );
-$t_row_count = count( $result );
+$t_filter = MantisBugFilter::loadCurrent();
+$t_filter->page_number = $t_page_number;
+$t_per_page_field = $t_filter->getField( FILTER_PROPERTY_ISSUES_PER_PAGE );
+$t_per_page_field->filter_value = -1;
+$t_rows = $t_filter->execute();
+$t_row_count = count( $t_rows );
 ?>
 
 <html xmlns:o="urn:schemas-microsoft-com:office:office"
@@ -154,7 +153,7 @@ $t_current_user_id = auth_get_current_user_id();
 $t_user_bugnote_order = user_pref_get_pref ( $t_current_user_id, 'bugnote_order' );
 
 for( $j=0; $j < $t_row_count; $j++ ) {
-	$t_bug = $result[$j];
+	$t_bug = $t_rows[$j];
 	$t_id = $t_bug->id;
 
 	if ( $j % 50 == 0 ) {

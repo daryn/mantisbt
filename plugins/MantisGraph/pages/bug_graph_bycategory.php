@@ -36,28 +36,15 @@
 	$t_interval->set_period_from_selector( 'interval' );
 	$f_show_as_table = gpc_get_bool( 'show_table', FALSE );
 	$f_summary = gpc_get_bool( 'summary', FALSE );
-
-	$t_interval_days = $t_interval->get_elapsed_days();
-	if ( $t_interval_days <= 14 ) {
-	    $t_incr = 60 * 60; // less than 14 days, use hourly
-	} else if ( $t_interval_days <= 92 ) {
-	    $t_incr = 24 * 60 * 60; // less than three month, use daily
-	} else {
-	    $t_incr = 7 * 24 * 60 * 60; // otherwise weekly
-	}
-
-	$f_page_number = 1;
-
-	$t_per_page = 0;
-	$t_bug_count = null;
-	$t_page_count = 0;
-
-	$t_filter = current_user_get_bug_filter();
-    $t_filter['_view_type']	= 'advanced';
-    $t_filter[FILTER_PROPERTY_STATUS] = array(META_FILTER_ANY);
-	$t_filter[FILTER_PROPERTY_SORT_FIELD_NAME] = '';
-	$rows = filter_get_bug_rows( $f_page_number, $t_per_page, $t_page_count, $t_bug_count, $t_filter, null, null, true );
-	if ( count($rows) == 0 ) {
+	$t_view_type = $t_filter->getField('_view_type');
+	$t_view_type->filter_value = 'advanced';
+	$t_status = $t_filter->getField(FILTER_PROPERTY_STATUS );
+	$t_status->filter_value = array( META_FILTER_ANY );
+	$t_sort = $t_filter->getField( FILTER_PROPERTY_SORT );
+	$t_sort->sort_field = '';
+	$t_filter->validate();
+	$t_rows = $t_filter->execute();
+	if ( count($t_rows) == 0 ) {
 		// no data to graph
 		exit();
 	}
@@ -81,7 +68,7 @@
 	// walk through all issues and grab their category for 'now'
 	$t_marker[$t_ptr] = time();
 	$t_data[$t_ptr] = array();
-	foreach ($rows as $t_row) {
+	foreach ($t_rows as $t_row) {
 	    // the following function can treat the resolved parameter as an array to match
         $t_cat = category_get_name( $t_row->category_id );
         if ($t_cat == '')

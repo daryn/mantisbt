@@ -23,15 +23,14 @@ require_once( 'core.php' );
 auth_ensure_user_authenticated( );
 helper_begin_long_process( );
 
-$t_page_number = 1;
-$t_per_page = -1;
-$t_bug_count = null;
-$t_page_count = null;
-
 $t_nl = "\n";
 
 # Get bug rows according to the current filter
-$t_result = filter_get_bug_rows( $t_page_number, $t_per_page, $t_page_count, $t_bug_count );
+$t_filter = MantisBugFilter::loadCurrent();
+$t_per_page = $t_filter->getField( FILTER_PROPERTY_ISSUES_PER_PAGE );
+$t_per_page->filter_value = -1;
+$t_filter->validate();
+$t_result = $t_filter->execute();
 if( $t_result === false ) {
 	$t_result = array( );
 }

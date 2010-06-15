@@ -24,7 +24,6 @@
  * @uses config_api.php
  * @uses constant_inc.php
  * @uses current_user_api.php
- * @uses filter_api.php
  * @uses gpc_api.php
  * @uses helper_api.php
  * @uses html_api.php
@@ -39,7 +38,6 @@ require_once( 'core.php' );
 require_api( 'config_api.php' );
 require_api( 'constant_inc.php' );
 require_api( 'current_user_api.php' );
-require_api( 'filter_api.php' );
 require_api( 'gpc_api.php' );
 require_api( 'helper_api.php' );
 require_api( 'html_api.php' );
@@ -88,7 +86,7 @@ if ( !is_blank( $c_ref ) ) {
 
 		# if view_all_bug_page, pass on filter
 		if ( strcasecmp( 'view_all_bug_page.php', $t_referrer_page ) == 0 ) {
-			$t_source_filter_id = filter_db_get_project_current( $f_project_id );
+			$t_source_filter_id = MantisBugFilter::getIdByCurrentProjectUser( $f_project_id );
 			$t_redirect_url = 'view_all_set.php?type=4';
 
 			if ( $t_source_filter_id !== null ) {

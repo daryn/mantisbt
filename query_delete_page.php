@@ -23,7 +23,6 @@
  * @uses core.php
  * @uses authentication_api.php
  * @uses compress_api.php
- * @uses filter_api.php
  * @uses form_api.php
  * @uses gpc_api.php
  * @uses html_api.php
@@ -35,7 +34,6 @@
 require_once( 'core.php' );
 require_api( 'authentication_api.php' );
 require_api( 'compress_api.php' );
-require_api( 'filter_api.php' );
 require_api( 'form_api.php' );
 require_api( 'gpc_api.php' );
 require_api( 'html_api.php' );
@@ -50,7 +48,9 @@ $f_query_id = gpc_get_int( 'source_query_id' );
 $t_redirect_url = 'query_view_page.php';
 $t_delete_url = 'query_delete.php';
 
-if ( !filter_db_can_delete_filter( $f_query_id ) ) {
+$t_bug_filter = MantisBugFilter::getById( $f_query_id );
+
+if ( !$t_bug_filter->canDelete() ) {
 	print_header_redirect( $t_redirect_url );
 }
 
@@ -58,7 +58,7 @@ html_page_top();
 ?>
 <br />
 <div align="center">
-<center><b><?php print string_display( filter_db_get_name( $f_query_id ) ); ?></b></center>
+<center><b><?php print string_display( $t_bug_filter->name ); ?></b></center>
 <?php echo lang_get( 'query_delete_msg' ); ?>
 
 <form method="post" action="<?php print $t_delete_url; ?>">

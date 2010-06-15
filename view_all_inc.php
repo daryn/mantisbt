@@ -26,7 +26,6 @@
  * @uses constant_inc.php
  * @uses current_user_api.php
  * @uses event_api.php
- * @uses filter_api.php
  * @uses gpc_api.php
  * @uses helper_api.php
  * @uses html_api.php
@@ -44,21 +43,13 @@ require_api( 'config_api.php' );
 require_api( 'constant_inc.php' );
 require_api( 'current_user_api.php' );
 require_api( 'event_api.php' );
-require_api( 'filter_api.php' );
 require_api( 'gpc_api.php' );
 require_api( 'helper_api.php' );
 require_api( 'html_api.php' );
 require_api( 'lang_api.php' );
 require_api( 'print_api.php' );
 
-$t_filter = current_user_get_bug_filter();
-# NOTE: this check might be better placed in current_user_get_bug_filter()
-if ( $t_filter === false ) {
-	$t_filter = filter_get_default();
-}
-
-list( $t_sort, ) = explode( ',', $t_filter['sort'] );
-list( $t_dir, ) = explode( ',', $t_filter['dir'] );
+$t_for_screen = true;
 
 $g_checkboxes_exist = false;
 
@@ -69,7 +60,7 @@ if ( helper_get_current_project() > 0 ) {
 	category_get_all_rows( helper_get_current_project() );
 } else {
 	$t_categories = array();
-	foreach ($rows as $t_row) {
+	foreach ($t_rows as $t_row) {
 		$t_categories[] = $t_row->category_id;
 	}
 	category_cache_array_rows( array_unique( $t_categories ) );
@@ -79,10 +70,11 @@ $t_columns = helper_get_columns_to_view( COLUMNS_TARGET_VIEW_PAGE );
 $col_count = count( $t_columns );
 
 $t_filter_position = config_get( 'filter_position' );
+include( dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'bug_filter_inc.php' );
 
 # -- ====================== FILTER FORM ========================= --
 if ( ( $t_filter_position & FILTER_POSITION_TOP ) == FILTER_POSITION_TOP ) {
-	filter_draw_selection_area( $f_page_number );
+	include( dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'templates/filter/bug_filter.tpl.php' );
 }
 # -- ====================== end of FILTER FORM ================== --
 
@@ -94,23 +86,9 @@ $t_status_legend_position = config_get( 'status_legend_position' );
 if ( $t_status_legend_position == STATUS_LEGEND_POSITION_TOP || $t_status_legend_position == STATUS_LEGEND_POSITION_BOTH ) {
 	html_status_legend();
 }
-
-/** @todo (thraxisp) this may want a browser check  ( MS IE >= 5.0, Mozilla >= 1.0, Safari >=1.2, ...) */
-if ( ( ON == config_get( 'dhtml_filters' ) ) && ( ON == config_get( 'use_javascript' ) ) ){
-	?>
-	<script type="text/javascript">
-	<!--
-		var string_loading = '<?php echo lang_get( 'loading' );?>';
-	// -->
-	</script>
-	<?php
-		html_javascript_link( 'xmlhttprequest.js');
-		html_javascript_link( 'addLoadEvent.js');
-		html_javascript_link( 'dynamic_filters.js');
-}
 ?>
 <br />
-<form name="bug_action" method="get" action="bug_actiongroup_page.php">
+<form id="bug_action" name="bug_action" method="get" action="bug_actiongroup_page.php">
 <?php # CSRF protection not required here - form does not result in modifications ?>
 <table id="buglist" class="width100" cellspacing="1">
 <thead>
@@ -123,13 +101,14 @@ if ( ( ON == config_get( 'dhtml_filters' ) ) && ( ON == config_get( 'use_javascr
 			$v_start = 0;
 			$v_end   = 0;
 
-			if ( count( $rows ) > 0 ) {
-				$v_start = $t_filter['per_page'] * ($f_page_number - 1) + 1;
-				$v_end = $v_start + count( $rows ) - 1;
+			if ( count( $t_rows ) > 0 ) {
+				$t_per_page = $t_filter->getField( FILTER_PROPERTY_ISSUES_PER_PAGE );
+				$v_start = $t_per_page->filter_value * ($f_page_number - 1) + 1;
+				$v_end = $v_start + count( $t_rows ) - 1;
 			}
 
 			echo lang_get( 'viewing_bugs_title' );
-			echo " ($v_start - $v_end / $t_bug_count)";
+			echo " ($v_start - $v_end / $t_filter->bug_count )";
 		?> </span>
 
 		<span class="floatleft small">
@@ -160,16 +139,26 @@ if ( ( ON == config_get( 'dhtml_filters' ) ) && ( ON == config_get( 'use_javascr
 		<span class="floatright small"><?php
 			# -- Page number links --
 			$f_filter	= gpc_get_int( 'filter', 0);
-			print_page_links( 'view_all_bug_page.php', 1, $t_page_count, (int)$f_page_number, $f_filter );
+			print_page_links( 'view_all_bug_page.php', 1, $t_filter->page_count, (int)$f_page_number, $f_filter );
 		?> </span>
 	</td>
 </tr>
 <?php # -- Bug list column header row -- ?>
 <tr class="buglist-headers row-category">
 <?php
-	foreach( $t_columns as $t_column ) {
-		$t_title_function = 'print_column_title';
-		helper_call_custom_function( $t_title_function, array( $t_column ) );
+	$t_sort = $t_filter->getField( FILTER_PROPERTY_SORT );
+	$t_sort_columns = $t_sort->getSortableColumnHeadings( $t_columns );
+	foreach( $t_sort_columns as $t_column ) { ?>
+		<th class="column-heading"><?php
+			if( !empty( $t_column['url'] ) ) {
+				echo '<a href="', $t_column['url'], '">', $t_column['label'], '</a>';
+			} else {
+				echo $t_column['label'];
+			}
+			if( $t_column['sorted'] ) {
+				print_sort_icon( $t_column['direction'] );
+			}
+		?></th><?php
 	}
 ?>
 </tr>
@@ -185,7 +174,8 @@ function write_bug_rows ( $p_rows )
 {
 	global $t_columns, $t_filter;
 
-	$t_in_stickies = ( $t_filter && ( 'on' == $t_filter[FILTER_PROPERTY_STICKY] ) );
+	$t_sticky_field = $t_filter->getField( FILTER_PROPERTY_STICKY );
+	$t_in_stickies = ( $t_filter && ( 'on' == $t_sticky_field->filter_value ) );
 
 	# pre-cache custom column data
 	columns_plugin_cache_issue_data( $p_rows );
@@ -223,7 +213,7 @@ function write_bug_rows ( $p_rows )
 }
 
 
-write_bug_rows($rows);
+write_bug_rows($t_rows);
 # -- ====================== end of BUG LIST ========================= --
 
 # -- ====================== MASS BUG MANIPULATION =================== --
@@ -251,7 +241,7 @@ write_bug_rows($rows);
 			<span class="floatright small">
 				<?php
 					$f_filter	= gpc_get_int( 'filter', 0);
-					print_page_links( 'view_all_bug_page.php', 1, $t_page_count, (int)$f_page_number, $f_filter );
+					print_page_links( 'view_all_bug_page.php', 1, $t_filter->page_count, (int)$f_page_number, $f_filter );
 				?>
 			</span>
 		</td>
@@ -269,6 +259,6 @@ if ( $t_status_legend_position == STATUS_LEGEND_POSITION_BOTTOM || $t_status_leg
 
 # -- ====================== FILTER FORM ========================= --
 if ( ( $t_filter_position & FILTER_POSITION_BOTTOM ) == FILTER_POSITION_BOTTOM ) {
-	filter_draw_selection_area( $f_page_number );
+	include( dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'templates/bug_filter.tpl.php' );
 }
 # -- ====================== end of FILTER FORM ================== --
