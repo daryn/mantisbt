@@ -1,0 +1,36 @@
+#filter { border: 1px solid black; display: block; width: 99.5%; background-color: #fff;}
+#filter_open { margin: 0; padding: 0;}
+#filter td { vertical-align: top; }
+th.column-heading { text-align: center; }
+#filter ul { margin: 0; padding: 0; list-style-type: none;  }
+#filter ul li { display: block; border-bottom: 1px solid #fff; padding: .5em; background-color: #c8c8e8; }
+#filter ul li.last { border-bottom: none; }
+
+#filters_form { display:inline; }
+#search_filters {  margin: 0 0 0 .25em; padding: 0; }
+#other_forms { margin: 0 0 0 1em; padding: 0; }
+#switch_links { margin: 0 0 0 1.5em; padding: 0; }
+
+.search-box { font-size: .9em;  }
+#source_query_id,
+#source_query_id option { font-size: .9em; }
+
+#view_type .bracket-link { padding: 0; margin: 0; }
+#permalink .bracket-link { padding: 0; margin: 0; }
+
+#loading_string { display:none; }
+span.small-caption { font-size: 8pt; }
+a.filter-link {
+	font-size: 8pt;
+}
+span.filter-target {
+	display:block;
+	font-size: 8pt;
+	width: 13em;
+	margin: 0 1px 1px 0;
+	padding: 2px 2px 2px 4px;
+}
+
+#filter_details { position: relative; border-top: 1px solid #ccc; }
+.current_project_name { font-size: smaller; color: green; margin-left: .5em; }
+.current_project_name_highlight { font-size: smaller; font-weight: bold; color: red; margin-left: .5em; }
