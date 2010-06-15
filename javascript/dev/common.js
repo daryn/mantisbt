@@ -39,6 +39,13 @@ if (a!= -1) {
 style_display = 'block';
 
 $(document).ready( function() {
+	/* Add datepicker for fields with .datepicker class */
+	$(function(){
+		$('.datepicker').live('click', function() {
+			$(this).datepicker({showOn:'focus'}).focus();
+		});
+	});
+
 	/* Global Tag change event added only if #tag_select exists */
 	$('#tag_select').live('change', function() {
 		var selected_tag = $('#tag_select option:selected').text();
@@ -56,6 +63,9 @@ $(document).ready( function() {
 		}
 		var t_div = id.substring(0, t_pos );
 		ToggleDiv( t_div );
+		if( t_div == 'filter' ) {
+			setFilterCollapse();
+		}
 	});
 
 	$('input[type=text].autocomplete').autocomplete({
@@ -135,7 +145,21 @@ $(document).ready( function() {
 		stopwatch.reset();
 		$('input[type=button].stopwatch_toggle').attr('value', translations['time_tracking_stopwatch_start']);
 	});
+	setFilterCollapse();
 });
+
+function setFilterCollapse() {
+	var t_filter_display = $j('#filter_open').css('display');
+	if( t_filter_display == 'none' ) {
+		t_src = 'images/plus.png';
+		t_alt = '+';
+	} else {
+		t_src = 'images/minus.png';
+		t_alt = '-';
+	}
+	$j('#filter_closed_link').children('img').attr('src', t_src );
+	$j('#filter_closed_link').children('img').attr('alt', t_alt );
+}
 
 /*
  * String manipulation

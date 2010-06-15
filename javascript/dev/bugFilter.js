@@ -2,8 +2,9 @@ var begin_form = '';
 var form_fields = new Array();
 var serialized_form_fields = new Array();
 $j(document).ready(function(){
+	/* events to highlight changes in the current filter */
 	var i = 0;
-	$j('[name=filters_open]').find('input').each(function() {
+	$j('[name=bug_filters]').find('input').each(function() {
 		var formname = $j(this).parent('form').attr('name');
 		if( formname != 'list_queries_open' && formname != 'open_queries' && formname != 'save_query' ) {
 			// serialize the field and add it to an array
@@ -15,17 +16,38 @@ $j(document).ready(function(){
 		}
 	});
 	$j.each( form_fields, function (index, value) {
-		serialized_form_fields[value] = $j('[name=filters_open]').find('[name='+value+']').serialize();
+		serialized_form_fields[value] = $j('[name=bug_filter]').find('[name='+value+']').serialize();
 	});
 
 	/* Set up events to modify the form css to show when a stored query has been modified */
-	begin_form = $j('[name=filters_open]').serialize();
+	begin_form = $j('[name=bug_filter]').serialize();
 
 	$j('[:input').live("change", function() {
 		filter_highlight_changes($j(this));
 	});
 	$j(':checkbox').live("click", function() {
 		filter_highlight_changes($j(this));
+	});
+
+	/* submit filter when changing to a stored query */
+	$j('#source_query_id').change( function() {
+		$j('#stored_queries').submit();
+	});
+
+	/* Events for populating filter fields */
+	$j('.filter-link').live( 'click', function( event ) {
+		event.preventDefault();
+		var page = 'return_dynamic_filters.php';
+		var link_url = $j(this).attr('href');
+		var toLoad = link_url.replace('view_all_bug_page.php', page );
+		var link_text = $j(this).attr('text');
+		$j(this).parent().text( link_text );
+		var loadingString = $j('#loading_string').text();
+		// get the target
+		var target = '#' + $j(this).attr('id') + '_target';
+		$j(target).text(loadingString);
+		// load the target with the field data
+		$j(target).load(toLoad);
 	});
 });
 
@@ -52,7 +74,7 @@ function filter_highlight_changes(item) {
 	filter_toggle_field_changed( item );
 
 	/* Check if form is different that started with */
-	var changed_form = $j('[name=filters_open]').serialize();
+	var changed_form = $j('[name=bug_filter]').serialize();
 	if( begin_form == changed_form ) {
 		filter_clean_all();
 	}
