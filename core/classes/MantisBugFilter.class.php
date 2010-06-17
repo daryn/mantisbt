@@ -252,7 +252,7 @@ class MantisBugFilter {
 		foreach( $this->fields AS $t_field_name=>$t_field ) {
 			if( $t_field_name == 'custom_fields' || $t_field_name == 'plugin_fields' ) {
 				foreach( $t_field AS $t_name=>$t_cf_plugin_field ) {
-					if( method_exists( 'validate', $t_cf_plugin_field ) ) {
+					if( method_exists( $t_cf_plugin_field, 'validate' ) ) {
 						$t_cf_plugin_field->validate();
 						$this->addField( $t_name, $t_cf_plugin_field, $t_field_name );
 					}
@@ -633,7 +633,7 @@ class MantisBugFilter {
 		foreach( $this->fields AS $t_field_name=>$t_field ) {
 			if( $t_field_name=='custom_fields' || $t_field_name=='plugin_fields' ) {
 				foreach( $t_field AS $t_cf_plugin_field ) {
-					if( is_subclass_of( 'MantisFilter', $t_cf_plugin_field ) ) {
+					if( is_subclass_of( $t_cf_plugin_field, 'MantisFilter' ) ) {
 						$t_url = $t_cf_plugin_field->urlEncodeField();
 						if( !empty( $t_url ) ) {
 							$t_query[] = $t_url;
