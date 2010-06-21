@@ -662,7 +662,7 @@ class MantisBugFilter {
 	 *	@return mixed $t_filter array
 	 */
 	public static function deserialize( $p_serialized_filter ) {
-		if( is_blank( $p_serialized_filter ) ) {
+		if( empty( $p_serialized_filter ) ) {
 			return false;
 		}
 
@@ -1137,11 +1137,7 @@ class MantisBugFilter {
 				# can't think of a time when this shouldn't be the current project.
 				$t_project_id = helper_get_current_project();
 				$t_view_all_cookie_id = self::getIdByCurrentProjectUser( $t_project_id );
-				$t_stored_filter = self::getById( $t_view_all_cookie_id );
-				$t_filter_arr = self::deserialize( $t_stored_filter );
-				if( $t_filter_arr ) {
-					$t_filter = self::loadArr( $t_filter_arr );
-				}
+				$t_filter = self::getById( $t_view_all_cookie_id );
 			}
 			# still no filter?  load the default
 			if( !$t_filter ) {
@@ -1230,9 +1226,9 @@ class MantisBugFilter {
 	public static function loadByCookie() {
 		$t_view_all_cookie_id = gpc_get_cookie( config_get( 'view_all_cookie' ), '' );
 		$t_view_all_cookie = self::getById( $t_view_all_cookie_id );
-		# check to see if the cookie does not exist
 
-		if( is_blank( $t_view_all_cookie ) ) {
+		# check to see if the cookie does not exist
+		if( empty( $t_view_all_cookie ) ) {
         	return false;
 		} else {
 			return $t_view_all_cookie;
