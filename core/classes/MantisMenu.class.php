@@ -103,7 +103,7 @@ class MantisMenu {
 		$t_is_child = false;
 		if( config_get( 'nested_menus' ) == ON ) {
 			if( $this->alpha_sort == ON ) {
-				usort( $this->links, 'self::cmp' );
+				usort( $this->links, 'MantisMenu::cmp' );
 			}
 			if( array_search( $this->name, $this->submenus ) !== false ) {
 				$t_is_child = true;
