@@ -458,7 +458,7 @@ $t_cookie_version = config_get( 'cookie_version' );
 $t_default_show_changed = config_get( 'default_show_changed' );
 
 # Clear the source query id.  Since we have entered new filter criteria.
-if( $f_apply_filter || $f_temp_filter ) {
+if( $f_apply_filter || $f_temp_filter || $t_current_filter->name == '' ) {
 	$t_setting_arr['_source_query_id'] = '';
 } else if( $f_save_query ) {
 	$t_setting_arr['_source_query_id'] = $f_source_query_id;
