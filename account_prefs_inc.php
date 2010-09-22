@@ -86,13 +86,7 @@ function edit_account_prefs($p_user_id = null, $p_error_if_protected = true, $p_
 	<td class="form-title">
 		<?php echo lang_get( 'default_account_preferences_title' ) ?>
 	</td>
-	<td class="right">
-		<?php
-			if ( $p_accounts_menu ) {
-				print_account_menu( 'account_prefs_page.php' );
-			}
-		?>
-	</td>
+	<td class="right">&nbsp;</td>
 </tr>
 <tr <?php echo helper_alternate_class() ?>>
 	<th class="category" width="50%">

@@ -51,8 +51,6 @@ access_ensure_global_level( config_get( 'manage_site_threshold' ) );
 $t_version_suffix = config_get_global( 'version_suffix' );
 
 html_page_top( lang_get( 'manage_link' ) );
-
-print_manage_menu();
 ?>
 
 <br/>

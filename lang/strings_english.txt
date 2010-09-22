@@ -1447,6 +1447,7 @@ If you requested this verification, visit the following URL to change your passw
 	
 	# manage columns page
 	'manage_columns_config' => 'Manage Columns',
+	'columns_preferences' => 'Column Preferences',
 	'all_columns_title' => 'All Available Columns',
 	'csv_columns_title' => 'CSV Columns',
 	'view_issues_columns_title' => 'View Issues Columns',

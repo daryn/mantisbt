@@ -60,9 +60,6 @@ $t_read_write_access = access_has_global_level( config_get('set_configuration_th
 
 html_page_top( lang_get( 'configuration_report' ) );
 
-print_manage_menu( 'adm_config_report.php' );
-print_manage_config_menu( 'adm_config_report.php' );
-
 function get_config_type( $p_type ) {
 	switch( $p_type ) {
 		case CONFIG_TYPE_INT:

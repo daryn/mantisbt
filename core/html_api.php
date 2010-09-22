@@ -38,12 +38,12 @@
  * 	html_top_banner
  * 	html_login_info
  * 	(print_project_menu_bar)
- * 	print_menu
+ * 	MantisMenu::print_menu('main')
  *
  * ...Page content here...
  *
  * html_page_bottom1
- * 	(print_menu)
+ * 	(MantisMenu::print_menu('main'))
  * 	html_page_bottom1a
  * 	html_bottom_banner
  * 	html_footer
@@ -225,7 +225,20 @@ function html_page_top2() {
 			echo '<br />';
 		}
 	}
-	print_menu();
+	print_bug_jump();
+	$t_menu_class = config_get( 'menu_class', 'MantisMenu' );
+	$t_page =  basename( $_SERVER['PHP_SELF'] );
+	$t_plugin_name = null;
+	if( $t_page == 'plugin.php' ) {
+		$t_page = gpc_get_string( 'page' );
+		list( $t_plugin_name, $t_page ) = explode( '/', $t_page );
+	}
+
+	$t_menus = call_user_func( array($t_menu_class, 'getMenusForPage' ), $t_page, $t_plugin_name );
+	foreach( $t_menus AS $t_menu ) {
+		$t_menu->__toString();
+	}
+
 	echo '<div id="content">', "\n";
 	event_signal( 'EVENT_LAYOUT_CONTENT_BEGIN' );
 }
@@ -272,7 +285,9 @@ function html_page_bottom1( $p_file = null ) {
 	echo '</div>', "\n";
 	if( config_get( 'show_footer_menu' ) ) {
 		echo '<br />';
-		print_menu();
+		print_bug_jump();
+		$t_menu_class = config_get( 'menu_class', 'MantisMenu' );
+		call_user_func( array($t_menu_class, 'printMenu' ), 'main' );
 	}
 
 	html_page_bottom1a( $p_file );
@@ -354,6 +369,7 @@ function require_css( $p_stylesheet_path ) {
 function html_css() {
 	global $g_stylesheets_included;
 	html_css_link( config_get( 'css_include_file' ) );
+	html_css_link( config_get( 'css_menu_include_file' ) );
 	html_css_link( 'jquery-ui.css' );
 	# Add right-to-left css if needed
 	if ( lang_get( 'directionality' ) == 'rtl' ) {
@@ -857,17 +873,8 @@ function print_menu() {
 		if( !current_user_is_anonymous() ) {
 			$t_menu_options[] = '<a id="logout-link" href="' . helper_mantis_url( 'logout_page.php">' ) . lang_get( 'logout_link' ) . '</a>';
 		}
-		echo '<div class="bug-jump">';
-		echo '<form method="post" action="' . helper_mantis_url( 'jump_to_bug.php" class="bug-jump-form">' );
-		# CSRF protection not required here - form does not result in modifications
 
-		$t_bug_label = lang_get( 'issue_id' );
-		echo '<input type="hidden" name="bug_label" value="', $t_bug_label, '" />';
-		echo '<input type="text" name="bug_id" size="10" class="small" />&nbsp;';
-
-		echo '<input type="submit" class="button-small" value="' . lang_get( 'jump' ) . '" />&nbsp;';
-		echo '</form>';
-		echo '</div>';
+		print_bug_jump();
 		echo '<div class="main-menu">';
 		echo '<div>';
 		echo '<ul class="menu">';
@@ -878,6 +885,20 @@ function print_menu() {
 		echo '</div>';
 		echo '</div>';
 	}
+}
+
+function print_bug_jump() {
+	echo '<div class="bug-jump">';
+	echo '<form method="post" action="' . helper_mantis_url( 'jump_to_bug.php" class="bug-jump-form">' );
+	# CSRF protection not required here - form does not result in modifications
+
+	$t_bug_label = lang_get( 'issue_id' );
+	echo '<input type="hidden" name="bug_label" value="', $t_bug_label, '" />';
+	echo '<input type="text" name="bug_id" size="10" class="small" />&nbsp;';
+
+	echo '<input type="submit" class="button-small" value="' . lang_get( 'jump' ) . '" />&nbsp;';
+	echo '</form>';
+	echo '</div>';
 }
 
 /**

@@ -82,7 +82,7 @@ echo '<br />';
 <div align="center">
 <form name="manage_columns_form" method="post" <?php if ( file_allow_bug_upload() ) { echo 'enctype="multipart/form-data"'; } ?> action="manage_config_columns_set.php">
 <?php echo form_security_field( 'manage_config_columns_set' ) ?>
-<table class="width50" cellspacing="1">
+<table class="width75" cellspacing="1">
 
 <!-- Title -->
 <tr>
@@ -91,13 +91,7 @@ echo '<br />';
 		<input type="hidden" name="form_page" value="<?php echo $t_account_page ? 'account' : 'manage'; ?>" />
 		<?php echo lang_get( 'manage_columns_config' ) ?>
 	</td>
-	<td class="right">
-		<?php
-			if ( $t_account_page ) {
-				print_account_menu( 'account_manage_columns_page.php' );
-			}
-		?>
-	</td>
+	<td class="right">&nbsp;</td>
 </tr>
 
 <!-- view issues columns -->

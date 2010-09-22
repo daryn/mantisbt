@@ -32,6 +32,8 @@
  * @uses config_api.php
  * @uses config_defaults_inc.php
  * @uses config_inc.php
+ * @uses config_menu_defaults_inc.php
+ * @uses config_menu_inc.php
  * @uses constant_inc.php
  * @uses crypto_api.php
  * @uses custom_constants_inc.php
@@ -84,6 +86,14 @@ require_once( dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'config_defaults_inc.p
 if ( file_exists( dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'config_inc.php' ) ) {
 	require_once( dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'config_inc.php' );
 	$t_config_inc_found = true;
+}
+
+# Include default menu configuration settings
+require_once( dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'config_menu_defaults_inc.php' );
+
+# config_menu_inc may not be present if this is a new install
+if ( file_exists( dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'config_menu_inc.php' ) ) {
+	require_once( dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'config_menu_inc.php' );
 }
 
 # Allow an environment variable (defined in an Apache vhost for example)

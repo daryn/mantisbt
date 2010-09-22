@@ -127,9 +127,7 @@ html_page_top( lang_get( 'account_link' ) );
 		<td class="form-title">
 			<?php echo lang_get( 'edit_account_title' ) ?>
 		</td>
-		<td class="right">
-			<?php print_account_menu( 'account_page.php' ) ?>
-		</td>
+		<td class="right">&nbsp;</td>
 	</tr>
 
 <?php if ( !helper_call_custom_function( 'auth_can_change_password', array() ) ) { ?> <!-- With LDAP -->

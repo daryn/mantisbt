@@ -37,8 +37,6 @@ form_security_purge( 'plugin_xml_import_action' );
 
 html_page_top( plugin_lang_get( 'import' ) );
 
-print_manage_menu( 'manage_import_issues_page.php' );
-
 echo "<pre>\n";
 $importer->import( );
 echo "</pre>\n";

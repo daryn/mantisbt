@@ -1,0 +1,31 @@
+.main-menu { float: right; width:100%; margin: 0; padding: 0; overflow: hidden; font-size: 1em; position: relative; top: -2em; border: 1px solid #999; background-color: #e8e8e8; z-index: 99; }
+.main-menu div { width: 93.75%; }
+.main-menu ul { clear: left; float: left; list-style: none; position: relative; left: 50%; margin: 0 0 0 -3.75em; padding: .25em; width: 90%; }
+.main-menu ul li { display:block; float: left; list-style: none; padding: .15em .5em; margin: 0; position: relative; right: 50%; }
+.main-menu ul li a { padding-right: .9em; border-right: 1px solid #000; text-decoration: underline; }
+.main-menu ul li > a#logout-link { padding-right: 0; border-right: none; }
+
+.manage-menu, .account-menu, .summary-menu , .graphs-menu, .manage-config-menu { float: left; width: 100%; margin: 0; padding: 0; font-size: 1em; position: relative; top: -1.5em; }
+.manage-menu ul, .manage-config-menu ul, .summary-menu ul, .graphs-menu ul { clear: left; float: left; list-style: none; position: relative; left: 50%; padding: 0; margin: 0; text-align: center; }
+.manage-menu ul li, .manage-config-menu ul li, .summary-menu ul li, .graphs-menu ul li { display:block; float: left; list-style: none; margin: .5em 0; padding: 0; position: relative; right: 50%; }
+.manage-menu ul a, .manage-config-menu ul a, .summary-menu ul a, .graphs-menu ul a, .account-menu ul a, .doc-menu ul a { text-decoration: underline; padding: 0 .25em; }
+.account-menu { float: right; margin-right: 1em; }
+.account-menu div { position: relative; width: 75%; margin: 0 auto; top: 5.5em; text-align: right; z-index: 100; }
+.doc-menu { top: 0; }
+.account-menu ul, .doc-menu ul { margin: 0 auto; padding: .25em; float: right; text-align: center; }
+.account-menu ul li, .doc-menu ul li { display: block; float: left; padding: 0; margin: 0; }
+
+/* bracket links */
+.manage-menu ul li:before,
+.manage-config-menu ul li:before,
+.summary-menu ul li:before,
+.graphs-menu ul li:before,
+.account-menu ul li:before,
+.doc-menu ul li:before { content: "[" }
+
+.manage-menu ul li:after,
+.manage-config-menu ul li:after,
+.summary-menu ul li:after,
+.graphs-menu ul li:after,
+.account-menu ul li:after,
+.doc-menu ul li:after { content: "]" }

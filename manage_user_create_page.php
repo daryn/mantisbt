@@ -53,8 +53,6 @@ access_ensure_global_level( config_get( 'manage_user_threshold' ) );
 $t_ldap = ( LDAP == config_get( 'login_method' ) );
 
 html_page_top();
-
-print_manage_menu( 'manage_user_create_page.php' );
 ?>
 <br />
 <div align="center">

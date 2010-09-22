@@ -47,9 +47,6 @@ access_ensure_project_level( config_get( 'manage_configuration_threshold' ) );
 
 html_page_top( lang_get( 'permissions_summary_report' ) );
 
-print_manage_menu( 'adm_permissions_report.php' );
-print_manage_config_menu( 'adm_permissions_report.php' );
-
 function get_section_begin_apr( $p_section_name ) {
 	$t_access_levels = MantisEnum::getValues( config_get( 'access_levels_enum_string' ) );
 

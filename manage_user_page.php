@@ -113,8 +113,6 @@ if ( $f_save ) {
 
 html_page_top( lang_get( 'manage_users_link' ) );
 
-print_manage_menu( 'manage_user_page.php' );
-
 # New Accounts Form BEGIN
 
 $days_old = 7 * SECONDS_PER_DAY;

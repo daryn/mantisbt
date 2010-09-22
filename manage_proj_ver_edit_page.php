@@ -67,7 +67,6 @@ access_ensure_project_level( config_get( 'manage_project_threshold' ), $t_versio
 
 html_page_top();
 
-print_manage_menu( 'manage_proj_ver_edit_page.php' );
 ?>
 <br />
 <div align="center">

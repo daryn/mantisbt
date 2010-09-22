@@ -76,10 +76,6 @@ if ( $g_global_profiles ) {
 html_page_top( lang_get( 'manage_profiles_link' ) );
 
 if ( $g_global_profiles ) {
-	print_manage_menu( 'manage_prof_menu_page.php' );
-}
-
-if ( $g_global_profiles ) {
 	$t_user_id = ALL_USERS;
 } else {
 	$t_user_id = auth_get_current_user_id();
@@ -98,13 +94,7 @@ if ( $g_global_profiles ) {
 		<input type="hidden" name="user_id" value="<?php echo $t_user_id ?>" />
 		<?php echo lang_get( 'add_profile_title' ) ?>
 	</td>
-	<td class="right">
-	<?php
-	if ( !$g_global_profiles ) {
-		print_account_menu( 'account_prof_menu_page.php' );
-	}
-	?>
-	</td>
+	<td class="right">&nbsp;</td>
 </tr>
 <tr class="row-1">
 	<th class="category" width="25%">
