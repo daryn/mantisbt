@@ -318,9 +318,6 @@ $s_messages = array(
 	'reset_query' => 'Nullstill filter',
 	'query_name' => 'Filternamn',
 	'query_exists' => 'Det ser ut til at denne spørjinga finst frå før.',
-	'query_dupe_name' => 'Ei spørjing har alt dette namnet. Vel eit anna namn for denne spørjinga.',
-	'query_blank_name' => 'Du kan ikkje lagra eit filter utan eit namn. Gje dette filteret eit namn før du lagrar det.',
-	'query_store_error' => 'Det oppstod ein feil under lagringa av denne spørjinga.',
 	'open_queries' => 'Handsam filter',
 	'query_delete_msg' => 'Er du sikker på at du ynskjer å sletta denne spørjinga?',
 	'bug_assign_to_button' => 'Tildel:',
@@ -393,3 +390,6 @@ $s_messages = array(
 
 $MANTIS_ERROR[ERROR_BUG_NOT_FOUND] = 'Fann ikkje sak %1$d';
 $MANTIS_ERROR[ERROR_CATEGORY_NOT_FOUND] = 'Fann ikkje kategorien.';
+$MANTIS_ERROR[ERROR_FILTER_NAME_EMPTY] = 'Du kan ikkje lagra eit filter utan eit namn. Gje dette filteret eit namn før du lagrar det.';
+$MANTIS_ERROR[ERROR_FILTER_NAME_DUPLICATE] = 'Ei spørjing har alt dette namnet. Vel eit anna namn for denne spørjinga.';
+$MANTIS_ERROR[ERROR_FILTER_STORE_ERROR] = 'Det oppstod ein feil under lagringa av denne spørjinga.';

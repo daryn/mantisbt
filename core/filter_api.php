@@ -111,11 +111,11 @@ function filter_get_plugin_filters() {
 }
 
 /**
- *  Get a permalink for the current active filter.  The results of using these fields by other users
+ *  Get a query string for the current active filter.  The results of using these fields by other users
  *  can be inconsistent with the original results due to fields like "Myself", "Current Project",
  *  and due to access level.
  * @param array $p_custom_filter
- * @return string the search.php?xxxx or an empty string if no criteria applied.
+ * @return string the query string or an empty string if no criteria applied.
  */
 function filter_get_url( $p_custom_filter ) {
 	$t_query = array();
@@ -295,14 +295,31 @@ function filter_get_url( $p_custom_filter ) {
 		}
 	}
 
-	if( count( $t_query ) > 0 ) {
-		$t_query_str = implode( $t_query, '&' );
-		$t_url = config_get( 'path' ) . 'search.php?' . $t_query_str;
-	} else {
-		$t_url = '';
-	}
+	return ( count( $t_query ) > 0 ? implode( $t_query, '&' ) : '' );
+}
 
-	return $t_url;
+/**
+ *	Get a permalink for the current active filter.  The results of using these fields by other users
+ *	can be inconsistent with the original results due to fields like "Myself", "Current Project",
+ *	and due to access level.
+ *	@param array $p_custom_filter
+ *	@return string the string search.php?... or an empty string if no criteria applied.
+ */
+function filter_get_permalink_url( $p_custom_filter ) {
+	$t_query_str = filter_get_url( $p_custom_filter );
+	return ( $t_query_str != '' ? config_get( 'path' ) . 'search.php?' . $t_query_str : '' );
+}
+
+/**
+ *	Get a temporary url for the requested filter.  The results of using these fields by other users
+ *	can be inconsistent with the original results due to fields like "Myself", "Current Project",
+ *	and due to access level.
+ *	@param array $p_temp_filter
+ *	@return string the string view_all_set.php?type=1&temporary=y... or an empty string if no criteria applied.
+ */
+function filter_get_temporary_url( $p_temp_filter ) {
+	$t_query_str = filter_get_url( $p_temp_filter );
+	return ( $t_query_str != '' ? config_get( 'path' ) . 'view_all_set.php?type=1&temporary=y&' . $t_query_str : '' );
 }
 
 /**
@@ -842,8 +859,12 @@ function filter_deserialize( $p_serialized_filter ) {
  * @return bool
  */
 function filter_is_cookie_valid() {
-	$t_view_all_cookie_id = gpc_get_cookie( config_get( 'view_all_cookie' ), '' );
-	$t_view_all_cookie = filter_db_get_filter( $t_view_all_cookie_id );
+	$t_current_filter = MantisStoredQuery::getCurrent();
+	if( $t_current_filter ) {
+		$t_view_all_cookie = $t_current_filter->filter_string;
+	} else {
+		return false;
+	}
 
 	# check to see if the cookie does not exist
 	if( is_blank( $t_view_all_cookie ) ) {
@@ -3355,20 +3376,25 @@ function filter_draw_selection_area2( $p_page_number, $p_for_screen = true, $p_e
 	echo '<input type="text" size="16" name="', FILTER_PROPERTY_SEARCH, '" value="', string_html_specialchars( $t_filter[FILTER_PROPERTY_SEARCH] ), '" />';
 	echo '</div>';
 	?>
-	<div class="submit-query"><input type="submit" name="filter" value="<?php echo lang_get( 'filter_button' )?>" /></div>
+	<div class="submit-query"><input type="submit" name="apply_filter_button" value="<?php echo lang_get( 'filter_button' )?>" /></div>
+	<?php
+	$t_source_query_id = isset( $t_filter['_source_query_id'] ) ? $t_filter['_source_query_id'] : -1;
+	if( access_has_project_level( config_get( 'stored_query_create_threshold' ) ) ) { ?>
+		<div class="save-query">
+			<input type="hidden" name="source_query_id" value="<?php echo $t_source_query_id; ?>" />
+			<input type="submit" name="save_query_button" value="<?php echo lang_get( 'save_query' )?>" />
+		</div><?php
+	} ?>
 	</form>
 	<?php
-	$t_stored_queries_arr = array();
-	$t_stored_queries_arr = filter_db_get_available_queries();
-
-	if( access_has_project_level( config_get( 'stored_query_create_threshold' ) ) ) { ?>
-	<div class="save-query">
-		<form method="post" name="save_query" action="query_store_page.php">
-			<?php # CSRF protection not required here - form does not result in modifications ?>
-			<input type="submit" name="save_query_button" class="button-small" value="<?php echo lang_get( 'save_query' )?>" />
-		</form>
-	</div><?php
+	$t_available_filters = MantisStoredQuery::getAvailable();
+	$t_stored_queries_arr = MantisStoredQuery::getListForMenu();
+	if( $t_source_query_id != -1 && $t_source_query_id != '' && !array_key_exists( $t_source_query_id, $t_stored_queries_arr ) ) {
+		# The filter is not configured to be on the dropdown but the user has applied it, probably from my view.  add the filter to the drop down as an indicator.
+		$t_stored_queries_arr[$t_source_query_id] = $t_available_filters[$t_source_query_id]['name'];
+		natcasesort( $t_stored_queries_arr );
 	}
+
 	if( count( $t_stored_queries_arr ) > 0 ) { ?>
 	<div class="manage-queries">
 		<form method="post" name="open_queries" action="query_view_page.php">
@@ -3384,7 +3410,6 @@ function filter_draw_selection_area2( $p_page_number, $p_for_screen = true, $p_e
 				<option value="-1"><?php echo '[' . lang_get( 'reset_query' ) . ']'?></option>
 				<option value="-1"></option>
 				<?php
-				$t_source_query_id = isset( $t_filter['_source_query_id'] ) ? $t_filter['_source_query_id'] : -1;
 				foreach( $t_stored_queries_arr as $t_query_id => $t_query_name ) {
 					echo '<option value="' . $t_query_id . '" ';
 					check_selected( $t_query_id, $t_source_query_id );
@@ -3418,7 +3443,7 @@ function filter_draw_selection_area2( $p_page_number, $p_for_screen = true, $p_e
 		}
 
 		if( access_has_project_level( config_get( 'create_permalink_threshold' ) ) ) {
-			echo '<span class="permalink"><a href="permalink_page.php?url=', urlencode( filter_get_url( $t_filter ) ), '">', lang_get( 'create_filter_link' ), '</a></span>';
+			echo '<span class="permalink"><a href="permalink_page.php?url=', urlencode( filter_get_permalink_url( $t_filter ) ), '">', lang_get( 'create_filter_link' ), '</a></span>';
 		} ?>
 	</div>
 	</div>
@@ -3764,7 +3789,7 @@ function print_filter_view_state() {
 function print_filter_sticky_issues() {
 	global $t_filter;
 	?><!-- Show or hide sticky bugs -->
-			<input type="checkbox" name="<?php echo FILTER_PROPERTY_STICKY;?>"<?php check_checked( gpc_string_to_bool( $t_filter[FILTER_PROPERTY_STICKY] ), true );?> />
+			<input type="checkbox" class="checkbox" name="<?php echo FILTER_PROPERTY_STICKY;?>" <?php check_checked( gpc_string_to_bool( $t_filter[FILTER_PROPERTY_STICKY] ), true );?> />
 		<?php
 }
 
@@ -4361,6 +4386,7 @@ function filter_clear_cache( $p_filter_id = null ) {
  * @param string $p_name
  * @param string $p_filter_string
  * @return int
+ * @deprecated since version 1.3. Moved to MantisStoredQuery::save.
  */
 function filter_db_set_for_current_user( $p_project_id, $p_is_public, $p_name, $p_filter_string ) {
 	$t_user_id = auth_get_current_user_id();
@@ -4428,6 +4454,7 @@ function filter_db_set_for_current_user( $p_project_id, $p_is_public, $p_name, $
  * @param int $p_filter_id
  * @param int $p_user_id
  * @return mixed
+ * @deprecated since version 1.3. Moved to MantisStoredQuery::getById. Returns object rather than string
  */
 function filter_db_get_filter( $p_filter_id, $p_user_id = null ) {
 	global $g_cache_filter_db_filters;
@@ -4476,6 +4503,7 @@ function filter_db_get_filter( $p_filter_id, $p_user_id = null ) {
  * @param int $p_project_id
  * @param int $p_user_id
  * @return int
+ * @deprecated since version 1.3. Moved to MantisStoredQuery::getCurrentFilterIdByProjectByUser.
  */
 function filter_db_get_project_current( $p_project_id, $p_user_id = null ) {
 	$t_filters_table = db_get_table( 'filters' );
@@ -4508,6 +4536,7 @@ function filter_db_get_project_current( $p_project_id, $p_user_id = null ) {
  *  Query for the filter name using the filter id
  * @param int $p_filter_id
  * @return string
+ * @deprecated since version 1.3. Moved to MantisStoredQuery::getNameById
  */
 function filter_db_get_name( $p_filter_id ) {
 	$t_filters_table = db_get_table( 'filters' );
@@ -4535,6 +4564,7 @@ function filter_db_get_name( $p_filter_id ) {
  *  Check if the current user has permissions to delete the stored query
  * @param $p_filter_id
  * @return bool
+ * @deprecated since version 1.3. Moved to MantisStoredQuery::canDelete
  */
 function filter_db_can_delete_filter( $p_filter_id ) {
 	$t_filters_table = db_get_table( 'filters' );
@@ -4565,6 +4595,7 @@ function filter_db_can_delete_filter( $p_filter_id ) {
  *  Delete the filter specified by $p_filter_id
  * @param $p_filter_id
  * @return bool
+ * @deprecated since version 1.3. Moved to MantisStoredQuery::delete
  */
 function filter_db_delete_filter( $p_filter_id ) {
 	$t_filters_table = db_get_table( 'filters' );
@@ -4587,6 +4618,7 @@ function filter_db_delete_filter( $p_filter_id ) {
 
 /**
  *  Delete all the unnamed filters
+ * @deprecated since version 1.3. Moved to MantisStoredQuery::deleteAllCurrent
  */
 function filter_db_delete_current_filters() {
 	$t_filters_table = db_get_table( 'filters' );
@@ -4602,6 +4634,7 @@ function filter_db_delete_current_filters() {
  * @param int $p_project_id
  * @param int $p_user_id
  * @return mixed
+ * @deprecated since version 1.3. Moved to MantisStoredQuery::getAvailable
  */
 function filter_db_get_available_queries( $p_project_id = null, $p_user_id = null ) {
 	$t_filters_table = db_get_table( 'filters' );
@@ -4651,6 +4684,7 @@ function filter_db_get_available_queries( $p_project_id = null, $p_user_id = nul
 /**
  * @param str $p_name
  * @return bool true when under max_length (64) and false when over
+ * @deprecated since version 1.3. Handled by MantisStoredQuery::process()
  */
 function filter_name_valid_length( $p_name ) {
 	if( utf8_strlen( $p_name ) > 64 ) {

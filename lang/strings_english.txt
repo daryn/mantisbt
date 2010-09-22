@@ -58,6 +58,7 @@ $s_messages = array(
 	
 	# new strings:
 	'all_projects' => 'All Projects',
+	'all_projects_label' => 'All Projects:',
 	'move_bugs' => 'Move Issues',
 	'operation_successful' => 'Operation successful.',
 	'date_order' => 'Date Order',
@@ -132,6 +133,7 @@ $s_messages = array(
 
 	'make_private' => 'Make Private',
 	'make_public' => 'Make Public',
+	'make_public_label' => 'Make Public:',
 
 	'create_new_project_link' => 'Create New Project',
 
@@ -1153,16 +1155,20 @@ If you requested this verification, visit the following URL to change your passw
 	'delete_query' => 'Delete Filter',
 	'query_deleted' => 'Filter Deleted',
 	'save_query' => 'Save Current Filter',
+	'save_new_query' => 'Save As New Filter',
+	'overwrite_query' => 'Overwrite Saved Filter',
 	'reset_query' => 'Reset Filter',
 	'query_name' => 'Filter Name',
 	'query_name_label' => 'Filter Name:',
 	'query_exists' => 'This particular filter appears to already exist.',
-	'query_dupe_name' => 'Another filter already has this name. Please choose a different name for this filter.',
-	'query_blank_name' => 'You cannot store a filter without a name. Please give this filter a name before saving it.',
-	'query_name_too_long' => 'You cannot store a filter name with more than 64 characters. Please give this filter a shorter name.',
-	'query_store_error' => 'There was an error saving this filter.',
 	'open_queries' => 'Manage Filters',
+	'query_list_title' => 'Manage %s Filters',
 	'query_delete_msg' => 'Are you sure you wish to delete this filter?',
+	'add_query_to_mylist' => 'Add to list',
+	'remove_query_from_mylist' => 'Remove from list',
+	'add_query_to_myview' => 'Add to My View',
+	'remove_query_from_myview' => 'Remove from My View',
+	'default_queries' => 'Default',
 	
 	# bug_view_advanced_page.php
 	'view_simple_link' => 'View Simple',
@@ -1530,6 +1536,11 @@ If you requested this verification, visit the following URL to change your passw
 	ERROR_BUG_NOT_FOUND => 'Issue %1$d not found.',
 	ERROR_FILTER_NOT_FOUND => 'Filter %1$s not found.',
 	ERROR_FILTER_TOO_OLD => 'The filter you are trying to use is too old to be upgraded. Please re-create it.',
+	ERROR_FILTER_NAME_EMPTY = 'You cannot store a filter without a name. Please give this filter a name before saving it.',
+	ERROR_FILTER_NAME_DUPLICATE = 'Another filter already has this name. Please choose a different name for this filter.',
+	ERROR_FILTER_NAME_TOO_LONG = 'You cannot store a filter name with more than 64 characters. Please give this filter a shorter name.',
+	ERROR_FILTER_STORE_ERROR = 'There was an error saving this filter.',
+	ERROR_FILTER_NO_STORED_QUERIES_FOUND_FOR_PROJECT = 'No Filters were found for %1$s.',
 	ERROR_EMAIL_INVALID => 'Invalid e-mail address.',
 	ERROR_EMAIL_DISPOSABLE => 'It is not allowed to use disposable e-mail addresses.',
 	ERROR_USER_PROFILE_NOT_FOUND => 'Profile not found.',

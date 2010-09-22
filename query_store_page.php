@@ -50,49 +50,103 @@ require_api( 'helper_api.php' );
 require_api( 'html_api.php' );
 require_api( 'lang_api.php' );
 
+require_js( 'queryStore.js' );
+
 auth_ensure_user_authenticated();
 
 compress_enable();
 
 html_page_top();
+
+$f_source_query_id = gpc_get_int( 'source_query_id', 0 );
+if( $f_source_query_id ) {
+	$t_query_to_store = MantisStoredQuery::getById( $f_source_query_id );
+} else {
+	$t_query_to_store = MantisStoredQuery::getCurrent();
+}
+$t_query_to_store_arr = filter_deserialize( $t_query_to_store->filter_string );
+$t_access_level = $t_query_to_store->access_level;
+$t_public = ( $t_query_to_store->is_public ? ' checked="checked" ' : '' );
+$t_name = '';
+$t_source_query_id = 0;
+$t_allow_overwrite = false;
+if( array_key_exists( '_source_query_id', $t_query_to_store_arr) && $t_cookie_id != $t_query_to_store_arr['_source_query_id'] ) {
+	# user has requested to save changes to an existing stored query
+	$t_original_query = MantisStoredQuery::getById( $t_query_to_store_arr['_source_query_id'] );
+
+	if( $t_original_query && MantisStoredQuery::canUpdate( $t_original_query->id ) ) {
+		$t_name = $t_original_query->name;
+		$t_access_level = $t_original_query->access_level;
+		$t_source_query_id = $t_query_to_store_arr['_source_query_id'];
+		$t_allow_overwrite = true;
+		$t_public = ( $t_original_query->is_public ? ' checked="checked" ' : '' );
+	}
+}
+$t_filter_string = string_attribute( $t_query_to_store->filter_string );
 ?>
 <br />
-<div>
+<div id="save-filter">
 <?php
-$t_query_to_store = filter_db_get_filter( gpc_get_cookie( config_get( 'view_all_cookie' ), '' ) );
-$t_query_arr = filter_db_get_available_queries();
-
-# Let's just see if any of the current filters are the
-# same as the one we're about the try and save
-foreach( $t_query_arr as $t_id => $t_name ) {
-	if ( filter_db_get_filter( $t_id ) == $t_query_to_store ) {
-		print lang_get( 'query_exists' ) . ' (' . $t_name . ')<br />';
-	}
+if( $t_original_query ) {
+	print '<div id="query-exists-msg">' . lang_get( 'query_exists' ) . ' (' . $t_original_query->name . ')</div>';
 }
 
 # Check for an error
 $t_error_msg = strip_tags( gpc_get_string( 'error_msg', null ) );
 if ( $t_error_msg != null ) {
-	print "<br />$t_error_msg<br /><br />";
+	echo '<div class="error-msg"><pre>' . $t_error_msg . '</pre></div>';
 }
 
+?>
+<form method="post" id="query-store-form" name="query_store" action="query_store.php">
+	<input type="hidden" name="filter_string" value="<?php echo $t_filter_string; ?>" />
+	<?php echo form_security_field( 'query_store' );
+if( $t_source_query_id ) {
+	print '<input type="hidden" name="source_query_id" value="' . $t_source_query_id . '" /> ';
+}
 print lang_get( 'query_name_label' ) . lang_get( 'word_separator' );
 ?>
-<form method="post" action="query_store.php">
-<?php echo form_security_field( 'query_store' ) ?>
-<input type="text" name="query_name" /><br />
+	<input type="text" name="query_name" size="40" value="<?php echo $t_name; ?>" /><br />
+	<div id="all-projects">
+		<label for="all-projects-field"><?php print lang_get( 'all_projects_label' ); ?></label>
+		<input type="checkbox" id="all-projects-field" name="all_projects" value="on" <?php check_checked( ALL_PROJECTS == helper_get_current_project() ) ?> />
+	</div>
 <?php
 if ( access_has_project_level( config_get( 'stored_query_create_shared_threshold' ) ) ) {
-	print '<input type="checkbox" name="is_public" value="on" /> ';
-	print lang_get( 'make_public' );
-	print '<br />';
+?>
+	<div id="filter-access">
+		<div id="filter-access-public">
+			<label for="filter-is-public">
+			<?php echo lang_get( 'make_public_label' ); ?>
+			</label>
+			<input type="checkbox" id="filter-is-public" name="is_public" value="on" <?php echo $t_public; ?> />
+		</div>
+		<div id="filter-access-level">
+			<label id="filter-access-level-label" for="filter-access-level">
+			<?php echo lang_get( 'access_level_label' ); ?>
+			</label>
+			<select id="filter-access-level" name="access_level">
+			<?php print_access_level_filter_option_list( $t_access_level ); ?>
+			</select>
+		</div>
+	</div>
+<?php
 }
 ?>
-<input type="checkbox" name="all_projects" value="on" <?php check_checked( ALL_PROJECTS == helper_get_current_project() ) ?> >
-<?php print lang_get( 'all_projects' ); ?><br /><br />
-<input type="submit" class="button" value="<?php print lang_get( 'save_query' ); ?>" />
+	<div id="filter-buttons">
+<?php
+if( $t_allow_overwrite ) {
+	print '<input type="submit" name="overwrite_query" class="button" value="' . lang_get( 'overwrite_query' ) . '" />';
+}
+if( $t_original_query->name != '' ) {
+	echo '<input type="submit" name="save_new_query" class="button" value="' . lang_get( 'save_new_query' ) . '" />';
+} else {
+	echo '<input type="submit" name="save_query" class="button" value="' . lang_get( 'save_query' ) . '" />';
+}
+?>
+	</div>
 </form>
-<form action="view_all_bug_page.php">
+<form id="filter-go-back" action="view_all_bug_page.php">
 <?php # CSRF protection not required here - form does not result in modifications ?>
 <input type="submit" class="button" value="<?php print lang_get( 'go_back' ); ?>" />
 </form>

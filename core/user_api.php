@@ -1153,9 +1153,9 @@ function user_get_bug_filter( $p_user_id, $p_project_id = null ) {
 		$t_project_id = $p_project_id;
 	}
 
-	$t_view_all_cookie_id = filter_db_get_project_current( $t_project_id, $p_user_id );
-	$t_view_all_cookie = filter_db_get_filter( $t_view_all_cookie_id, $p_user_id );
-	$t_cookie_detail = explode( '#', $t_view_all_cookie, 2 );
+	$t_view_all_cookie_id = MantisStoredQuery::getCurrentFilterIdByProjectByUser( $t_project_id, $p_user_id );
+	$t_current_filter = MantisStoredQuery::getById( $t_view_all_cookie_id, $p_user_id );
+	$t_cookie_detail = explode( '#', $t_current_filter->filter_string, 2 );
 
 	if( !isset( $t_cookie_detail[1] ) ) {
 		return false;

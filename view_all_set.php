@@ -62,6 +62,9 @@ $f_type					= gpc_get_int( 'type', -1 );
 $f_source_query_id		= gpc_get_int( 'source_query_id', -1 );
 $f_print				= gpc_get_bool( 'print' );
 $f_temp_filter			= gpc_get_bool( 'temporary' );
+$f_save_query 			= gpc_get_bool( 'save_query_button' );
+$f_switch_to_query 		= gpc_get_bool( 'switch_to_query_button' );
+$f_apply_filter			= gpc_get_bool( 'apply_filter_button' );
 
 # validate filter type
 $f_default_view_type = 'simple';
@@ -368,7 +371,6 @@ if ( $f_sticky_issues ) {
 } else {
 	$f_sticky_issues = 'off';
 }
-
 if ( $f_type < 0 ) {
 	print_header_redirect( 'view_all_bug_page.php' );
 }
@@ -421,13 +423,19 @@ if ( ( $f_type == 3 ) && ( $f_source_query_id == -1 ) ) {
 	26: $f_show_profile
 
 */
-# Set new filter values.  These are stored in a cookie
-$t_view_all_cookie_id = gpc_get_cookie( config_get( 'view_all_cookie' ), '' );
-$t_view_all_cookie = filter_db_get_filter( $t_view_all_cookie_id );
 
 # process the cookie if it exists, it may be blank in a new install
-if ( !is_blank( $t_view_all_cookie ) ) {
-	$t_setting_arr = filter_deserialize( $t_view_all_cookie );
+if( $f_source_query_id != -1 ) {
+	$t_current_filter = MantisStoredQuery::getById( $f_source_query_id );
+} else {
+	# Set new filter values.  These are stored in a cookie
+	$t_current_filter = MantisStoredQuery::getCurrent();
+}
+
+$t_current_filter->temporary = $f_temp_filter;
+
+if ( !is_blank( $t_current_filter->filter_string ) ) {
+	$t_setting_arr = filter_deserialize( $t_current_filter->filter_string );
 	if ( false === $t_setting_arr ) {
 		# couldn't deserialize, if we were trying to use the filter, clear it and reload
 		# for ftype = 0, 1, or 3, we are going to re-write the filter anyways
@@ -441,19 +449,28 @@ if ( !is_blank( $t_view_all_cookie ) ) {
 } else {
 	# no cookie found, set it
 	$f_type = 1;
+	$t_project_id = helper_get_current_project();
+	$t_current_filter = new MantisStoredQuery();
+	$t_current_filter->project_id = $t_project_id;
 }
 
 $t_cookie_version = config_get( 'cookie_version' );
 $t_default_show_changed = config_get( 'default_show_changed' );
 
 # Clear the source query id.  Since we have entered new filter criteria.
-$t_setting_arr['_source_query_id'] = '';
+if( $f_apply_filter || $f_temp_filter ) {
+	$t_setting_arr['_source_query_id'] = '';
+} else if( $f_save_query ) {
+	$t_setting_arr['_source_query_id'] = $f_source_query_id;
+}
 switch ( $f_type ) {
 	# New cookie
 	case '0':
 			log_event( LOG_FILTERING, 'view_all_set.php: New cookie' );
 			$t_setting_arr = array();
-
+			$t_project_id = helper_get_current_project();
+			$t_current_filter = new MantisStoredQuery();
+			$t_current_filter->project_id = $t_project_id;
 			break;
 	# Update filters
 	case '1':
@@ -513,12 +530,10 @@ switch ( $f_type ) {
 	# database over the top of our current one
 	case '3':
 			log_event( LOG_FILTERING, 'view_all_set.php: Copy another query from database' );
-
-			$t_filter_string = filter_db_get_filter( $f_source_query_id );
 			# If we can use the query that we've requested,
 			# grab it. We will overwrite the current one at the
 			# bottom of this page
-			$t_setting_arr = filter_deserialize( $t_filter_string );
+			$t_setting_arr = filter_deserialize( $t_current_filter->filter_string );
 			if ( false === $t_setting_arr ) {
 				# couldn't deserialize, if we were trying to use the filter, clear it and reload
 				gpc_clear_cookie( 'view_all_cookie' );
@@ -526,11 +541,18 @@ switch ( $f_type ) {
 				trigger_error( ERROR_FILTER_TOO_OLD, ERROR );
 				exit; # stop here
 			}
-			# Store the source query id to select the correct filter in the drop down.
-			$t_setting_arr['_source_query_id'] = $f_source_query_id;
+			# Overwrite the source query id in the array to select the correct filter in the drop down.
+			if( $t_current_filter->name != '' ) {
+				$t_setting_arr['_source_query_id'] = $f_source_query_id;
+			}
 			break;
 	# Generalise the filter
 	case '4':
+			$t_project_id = helper_get_current_project();
+			$t_filter_id = MantisStoredQuery::getCurrentFilterIdByProjectByUser( $t_project_id );
+			$t_current_filter = new MantisStoredQuery();
+			$t_current_filter->project_id = $t_project_id;
+
 			log_event( LOG_FILTERING, 'view_all_set.php: Generalise the filter' );
 
 			$t_setting_arr[ FILTER_PROPERTY_CATEGORY_ID ]		= array( META_FILTER_ANY );
@@ -602,29 +624,32 @@ if( $f_view_type == "simple" && $tc_setting_arr[FILTER_PROPERTY_HIDE_STATUS][0] 
     }
 }
 
-$t_settings_serialized = serialize( $tc_setting_arr );
-$t_settings_string = $t_cookie_version . '#' . $t_settings_serialized;
+$t_settings_string = MantisStoredQuery::getCookie( $tc_setting_arr );
+$t_current_filter->filter_string = $t_settings_string;
+
 
 # If only using a temporary filter, don't store it in the database
 if ( !$f_temp_filter ) {
 	# Store the filter string in the database: its the current filter, so some values won't change
-	$t_project_id = helper_get_current_project();
-	$t_project_id = ( $t_project_id * -1 );
-	$t_row_id = filter_db_set_for_current_user( $t_project_id, false, '', $t_settings_string );
+	$t_current_filter->process();
+
+	$t_row_id = $t_current_filter->save();
 
 	# set cookie values
 	gpc_set_cookie( config_get( 'view_all_cookie' ), $t_row_id, time()+config_get( 'cookie_time_length' ), config_get( 'cookie_path' ) );
 }
 
-# redirect to print_all or view_all page
+# redirect to print_all,  view_all or query_store page
 if ( $f_print ) {
 	$t_redirect_url = 'print_all_bug_page.php';
+} else if ( $f_save_query ) {
+	$t_redirect_url = 'query_store_page.php';
 } else {
 	$t_redirect_url = 'view_all_bug_page.php';
 }
 
 if ( $f_temp_filter ) {
-	$t_token_id = token_set( TOKEN_FILTER, $t_settings_serialized );
+	$t_token_id = token_set( TOKEN_FILTER, $t_current_filter->filter_string );
 	$t_redirect_url = $t_redirect_url . '?filter=' . $t_token_id;
 	html_meta_redirect( $t_redirect_url, 0 );
 } else {

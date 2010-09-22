@@ -21,7 +21,7 @@ $(document).ready(function(){
 	/* Set up events to modify the form css to show when a stored query has been modified */
 	begin_form = $('[name=filters_open]').serialize();
 
-	$('[:input').live("change", function() {
+	$(':input').live("change", function() {
 		filter_highlight_changes($(this));
 	});
 	$(':checkbox').live("click", function() {

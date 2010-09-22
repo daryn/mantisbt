@@ -53,15 +53,15 @@ $f_query_id = gpc_get_int( 'source_query_id' );
 $t_redirect_url = 'query_view_page.php';
 $t_delete_url = 'query_delete.php';
 
-if ( !filter_db_can_delete_filter( $f_query_id ) ) {
+if ( !MantisStoredQuery::canDelete( $f_query_id ) ) {
 	print_header_redirect( $t_redirect_url );
 }
 
 html_page_top();
 ?>
 <br />
-<div class="center">
-<strong><?php print string_display( filter_db_get_name( $f_query_id ) ); ?></strong>
+<div center="center">
+<b><?php print string_display( MantisStoredQuery::getNameById( $f_query_id ) ); ?></b>
 <?php echo lang_get( 'query_delete_msg' ); ?>
 
 <form method="post" action="<?php print $t_delete_url; ?>">

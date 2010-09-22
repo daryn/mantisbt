@@ -966,6 +966,20 @@ $g_status_percentage_legend = OFF;
 $g_filter_position = FILTER_POSITION_TOP;
 
 /**
+ * The default filters to be included in the my view page. This can be
+ * overriden by each user using Manage Filters on the view all bug page.
+ * @global array $g_myview_filters_
+ */
+$g_myview_filters = array ();
+
+/**
+ * The default filters to be included in the filter select list on the view all bug page. This can be
+ * overriden by each user using Manage Filters on the view all bug page.
+ * @global array $g_myview_filters_
+ */
+$g_mylist_filters = array ();
+
+/**
  * Position of action buttons when viewing issues.
  * Can be: POSITION_TOP, POSITION_BOTTOM, or POSITION_BOTH.
  * @global int $g_action_button_position

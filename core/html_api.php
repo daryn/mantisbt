@@ -851,7 +851,7 @@ function print_menu() {
 
 		# Logout (no if anonymously logged in)
 		if( !current_user_is_anonymous() ) {
-			$t_menu_options[] = '<a id="logout-link" href="' . helper_mantis_url( 'logout_page.php">' ) . lang_get( 'logout_link' ) . '</a>';
+			$t_menu_options[] = '<a class="logout-link" href="' . helper_mantis_url( 'logout_page.php">' ) . lang_get( 'logout_link' ) . '</a>';
 		}
 		echo '<form method="post" action="' . helper_mantis_url( 'jump_to_bug.php" class="bug-jump-form">' );
 		echo '<fieldset class="bug-jump">';

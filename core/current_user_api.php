@@ -217,7 +217,7 @@ function current_user_get_bug_filter( $p_project_id = null ) {
 		if( is_numeric( $f_filter_string ) ) {
 			$t_token = token_get_value( TOKEN_FILTER );
 			if( null != $t_token ) {
-				$t_filter = unserialize( $t_token );
+				$t_filter = filter_deserialize( $t_token );
 			}
 		} else {
 			$t_filter = unserialize( $f_filter_string );

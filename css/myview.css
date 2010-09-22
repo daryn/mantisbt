@@ -1,0 +1,63 @@
+.my-buglist { width: 48%; border: 1px solid #000; margin: .5em; padding: 0; }
+.my-buglist-nav { font-weight: bold; }
+.my-buglist-title { float: left; padding: .5em; }
+.my-buglist-count { float: right; padding: .5em; }
+ul.buglist { clear: both; margin: 0; padding: 0; list-style: none; }
+ul.buglist li {
+	position: relative;
+	display: block;
+	margin: .075em;
+	margin-top: 0;
+	line-height: 1em;
+	padding: .25em;
+	background-image: url( /images/white_border.gif );
+	background-repeat:repeat-y;
+	background-position: 5.75em 0%;
+}
+
+.buglist-id, .buglist-summary, .buglist-edit, .buglist-priority, .buglist-attachments, .buglist-private, .buglist-project, .buglist-category, .last-modified { position: relative; display: block; float: left; margin: 0; padding: 0 .25em .25em .25em; }
+.buglist-id { width: 5em; }
+.buglist-summary { width: 81%; padding-left: .75em; }
+
+.buglist-icons { clear: both; float: left; margin:0; padding: 0 .25em; 0 .25em; width: 5em; }
+.buglist-edit { clear: left; padding: 0; }
+.buglist-priority { padding: 0; }
+.buglist-attachments { padding: 0; }
+.buglist-private { padding: 0; }
+
+.buglist-project { padding-left: .75em; }
+.buglist-category { padding-left: .75em; }
+.last-modified { float: right; }
+
+/* fixed boxes on */
+.leftcol-fixed { clear: both; float: left; }
+.rightcol-fixed { float: right; }
+
+/* fixed boxes off */
+.leftcol { clear:both; width: 49%; float: left; top: 0; margin: 0; padding: 0; }
+.rightcol { width: 49%; float: right; top: 0; margin: 0; padding: 0; }
+
+.leftcol .my-buglist, .rightcol .my-buglist { width: 98%; }
+
+/* 800x600 */ 
+/* fixed boxes on */
+.width-800 .my-buglist, .width-800 .leftcol, .width-800 .rightcol { clear: both; width: 98%; }
+
+.width-800 .buglist-summary { width: 70%; }
+.width-800 .leftcol { clear:both; }
+.width-800 .rightcol { clear: both; }
+.width-800 .last-modified { float: right; }
+
+/* 1024x768 */
+.width-1024 .buglist-summary { width: 75%; }
+.width-1024 .last-modified { float: right; }
+
+/* 1280x1024 should use defaults */
+
+/* other resolutions wider than 1280 */
+.width-wide .my-buglist { width: 48.5%; }
+.width-wide .buglist-summary { width: 85%; }
+
+/* fixed boxes off */
+.leftcol .my-buglist, .rightcol .my-buglist { width: 100%; }
+

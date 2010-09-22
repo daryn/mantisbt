@@ -59,8 +59,8 @@ function mc_filter_get_issues( $p_username, $p_password, $p_project_id, $p_filte
 
 	$t_page_count = 0;
 	$t_bug_count = 0;
-	$t_filter = filter_db_get_filter( $p_filter_id );
-	$t_filter_detail = explode( '#', $t_filter, 2 );
+	$t_filter_obj = MantisStoredQuery::getById( $p_filter_id );
+	$t_filter_detail = explode( '#', $t_filter_obj->filter_string, 2 );
 	if( !isset( $t_filter_detail[1] ) ) {
 		return new soap_fault( 'Server', '', 'Invalid Filter' );
 	}
@@ -98,8 +98,8 @@ function mc_filter_get_issue_headers( $p_username, $p_password, $p_project_id, $
 
 	$t_page_count = 0;
 	$t_bug_count = 0;
-	$t_filter = filter_db_get_filter( $p_filter_id );
-	$t_filter_detail = explode( '#', $t_filter, 2 );
+	$t_filter_obj = MantisStoredQuery::getById( $p_filter_id );
+	$t_filter_detail = explode( '#', $t_filter_obj->filter_string, 2 );
 	if( !isset( $t_filter_detail[1] ) ) {
 		return new soap_fault( 'Server', '', 'Invalid Filter' );
 	}

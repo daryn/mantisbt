@@ -611,3 +611,4 @@ $upgrade[] = Array( 'UpdateFunction', 'correct_multiselect_custom_fields_db_form
 $upgrade[] = Array( 'UpdateFunction', "stored_filter_migrate" );
 $upgrade[] = Array( 'AddColumnSQL', Array( db_get_table( 'custom_field_string' ), "
 	text		XL  			NULL DEFAULT NULL " ) );
+$upgrade[] = Array( 'AddColumnSQL', Array( db_get_table( 'filters' ), " access_level I  UNSIGNED     NULL " ) );

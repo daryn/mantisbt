@@ -57,486 +57,124 @@ require_api( 'print_api.php' );
 require_api( 'project_api.php' );
 require_api( 'string_api.php' );
 
-$t_filter = current_user_get_bug_filter();
-if( $t_filter === false ) {
-	$t_filter = filter_get_default();
-}
-
-$t_sort = $t_filter['sort'];
-$t_dir = $t_filter['dir'];
-
-$t_icon_path = config_get( 'icon_path' );
-$t_update_bug_threshold = config_get( 'update_bug_threshold' );
-$t_bug_resolved_status_threshold = config_get( 'bug_resolved_status_threshold' );
-$t_hide_status_default = config_get( 'hide_status_default' );
-$t_default_show_changed = config_get( 'default_show_changed' );
-
-$c_filter['assigned'] = array(
-	FILTER_PROPERTY_CATEGORY_ID => Array(
-		'0' => META_FILTER_ANY,
-	),
-	FILTER_PROPERTY_SEVERITY => Array(
-		'0' => META_FILTER_ANY,
-	),
-	FILTER_PROPERTY_STATUS => Array(
-		'0' => META_FILTER_ANY,
-	),
-	FILTER_PROPERTY_HIGHLIGHT_CHANGED => $t_default_show_changed,
-	FILTER_PROPERTY_REPORTER_ID => Array(
-		'0' => META_FILTER_ANY,
-	),
-	FILTER_PROPERTY_HANDLER_ID => Array(
-		'0' => $t_current_user_id,
-	),
-	FILTER_PROPERTY_RESOLUTION => Array(
-		'0' => META_FILTER_ANY,
-	),
-	FILTER_PROPERTY_BUILD => Array(
-		'0' => META_FILTER_ANY,
-	),
-	FILTER_PROPERTY_VERSION => Array(
-		'0' => META_FILTER_ANY,
-	),
-	FILTER_PROPERTY_HIDE_STATUS => Array(
-		'0' => $t_bug_resolved_status_threshold,
-	),
-	FILTER_PROPERTY_MONITOR_USER_ID => Array(
-		'0' => META_FILTER_ANY,
-	),
-);
-$url_link_parameters['assigned'] = FILTER_PROPERTY_HANDLER_ID . '=' . $t_current_user_id . '&' . FILTER_PROPERTY_HIDE_STATUS . '=' . $t_bug_resolved_status_threshold;
-
-$c_filter['recent_mod'] = array(
-	FILTER_PROPERTY_CATEGORY_ID => Array(
-		'0' => META_FILTER_ANY,
-	),
-	FILTER_PROPERTY_SEVERITY => Array(
-		'0' => META_FILTER_ANY,
-	),
-	FILTER_PROPERTY_STATUS => Array(
-		'0' => META_FILTER_ANY,
-	),
-	FILTER_PROPERTY_HIGHLIGHT_CHANGED => $t_default_show_changed,
-	FILTER_PROPERTY_REPORTER_ID => Array(
-		'0' => META_FILTER_ANY,
-	),
-	FILTER_PROPERTY_HANDLER_ID => Array(
-		'0' => META_FILTER_ANY,
-	),
-	FILTER_PROPERTY_RESOLUTION => Array(
-		'0' => META_FILTER_ANY,
-	),
-	FILTER_PROPERTY_BUILD => Array(
-		'0' => META_FILTER_ANY,
-	),
-	FILTER_PROPERTY_VERSION => Array(
-		'0' => META_FILTER_ANY,
-	),
-	FILTER_PROPERTY_HIDE_STATUS => Array(
-		'0' => META_FILTER_NONE,
-	),
-	FILTER_PROPERTY_MONITOR_USER_ID => Array(
-		'0' => META_FILTER_ANY,
-	),
-);
-$url_link_parameters['recent_mod'] = FILTER_PROPERTY_HIDE_STATUS . '=none';
-
-$c_filter['reported'] = array(
-	FILTER_PROPERTY_CATEGORY_ID => Array(
-		'0' => META_FILTER_ANY,
-	),
-	FILTER_PROPERTY_SEVERITY => Array(
-		'0' => META_FILTER_ANY,
-	),
-	FILTER_PROPERTY_STATUS => Array(
-		'0' => META_FILTER_ANY,
-	),
-	FILTER_PROPERTY_HIGHLIGHT_CHANGED => $t_default_show_changed,
-	FILTER_PROPERTY_REPORTER_ID => Array(
-		'0' => $t_current_user_id,
-	),
-	FILTER_PROPERTY_HANDLER_ID => Array(
-		'0' => META_FILTER_ANY,
-	),
-	FILTER_PROPERTY_SORT_FIELD_NAME => 'last_updated',
-	FILTER_PROPERTY_RESOLUTION => Array(
-		'0' => META_FILTER_ANY,
-	),
-	FILTER_PROPERTY_BUILD => Array(
-		'0' => META_FILTER_ANY,
-	),
-	FILTER_PROPERTY_VERSION => Array(
-		'0' => META_FILTER_ANY,
-	),
-	FILTER_PROPERTY_HIDE_STATUS => Array(
-		'0' => $t_hide_status_default,
-	),
-	FILTER_PROPERTY_MONITOR_USER_ID => Array(
-		'0' => META_FILTER_ANY,
-	),
-);
-$url_link_parameters['reported'] = FILTER_PROPERTY_REPORTER_ID . '=' . $t_current_user_id . '&' . FILTER_PROPERTY_HIDE_STATUS . '=' . $t_hide_status_default;
-
-$c_filter['resolved'] = array(
-	FILTER_PROPERTY_CATEGORY_ID => Array(
-		'0' => META_FILTER_ANY,
-	),
-	FILTER_PROPERTY_SEVERITY => Array(
-		'0' => META_FILTER_ANY,
-	),
-	FILTER_PROPERTY_STATUS => Array(
-		'0' => $t_bug_resolved_status_threshold,
-	),
-	FILTER_PROPERTY_HIGHLIGHT_CHANGED => $t_default_show_changed,
-	FILTER_PROPERTY_REPORTER_ID => Array(
-		'0' => META_FILTER_ANY,
-	),
-	FILTER_PROPERTY_HANDLER_ID => Array(
-		'0' => META_FILTER_ANY,
-	),
-	FILTER_PROPERTY_RESOLUTION => Array(
-		'0' => META_FILTER_ANY,
-	),
-	FILTER_PROPERTY_BUILD => Array(
-		'0' => META_FILTER_ANY,
-	),
-	FILTER_PROPERTY_VERSION => Array(
-		'0' => META_FILTER_ANY,
-	),
-	FILTER_PROPERTY_HIDE_STATUS => Array(
-		'0' => $t_hide_status_default,
-	),
-	FILTER_PROPERTY_MONITOR_USER_ID => Array(
-		'0' => META_FILTER_ANY,
-	),
-);
-$url_link_parameters['resolved'] = FILTER_PROPERTY_STATUS . '=' . $t_bug_resolved_status_threshold . '&' . FILTER_PROPERTY_HIDE_STATUS . '=' . $t_bug_resolved_status_threshold;
-
-$c_filter['unassigned'] = array(
-	FILTER_PROPERTY_CATEGORY_ID => Array(
-		'0' => META_FILTER_ANY,
-	),
-	FILTER_PROPERTY_SEVERITY => Array(
-		'0' => META_FILTER_ANY,
-	),
-	FILTER_PROPERTY_STATUS => Array(
-		'0' => META_FILTER_ANY,
-	),
-	FILTER_PROPERTY_HIGHLIGHT_CHANGED => $t_default_show_changed,
-	FILTER_PROPERTY_REPORTER_ID => Array(
-		'0' => META_FILTER_ANY,
-	),
-	FILTER_PROPERTY_HANDLER_ID => Array(
-		'0' => META_FILTER_NONE,
-	),
-	FILTER_PROPERTY_RESOLUTION => Array(
-		'0' => META_FILTER_ANY,
-	),
-	FILTER_PROPERTY_BUILD => Array(
-		'0' => META_FILTER_ANY,
-	),
-	FILTER_PROPERTY_VERSION => Array(
-		'0' => META_FILTER_ANY,
-	),
-	FILTER_PROPERTY_HIDE_STATUS => Array(
-		'0' => $t_hide_status_default,
-	),
-	FILTER_PROPERTY_MONITOR_USER_ID => Array(
-		'0' => META_FILTER_ANY,
-	),
-);
-$url_link_parameters['unassigned'] = FILTER_PROPERTY_HANDLER_ID . '=[none]' . '&' . FILTER_PROPERTY_HIDE_STATUS . '=' . $t_hide_status_default;
-
-# TODO: check. handler value looks wrong
-
-$c_filter['monitored'] = array(
-	FILTER_PROPERTY_CATEGORY_ID => Array(
-		'0' => META_FILTER_ANY,
-	),
-	FILTER_PROPERTY_SEVERITY => Array(
-		'0' => META_FILTER_ANY,
-	),
-	FILTER_PROPERTY_STATUS => Array(
-		'0' => META_FILTER_ANY,
-	),
-	FILTER_PROPERTY_HIGHLIGHT_CHANGED => $t_default_show_changed,
-	FILTER_PROPERTY_REPORTER_ID => Array(
-		'0' => META_FILTER_ANY,
-	),
-	FILTER_PROPERTY_HANDLER_ID => Array(
-		'0' => META_FILTER_ANY,
-	),
-	FILTER_PROPERTY_RESOLUTION => Array(
-		'0' => META_FILTER_ANY,
-	),
-	FILTER_PROPERTY_BUILD => Array(
-		'0' => META_FILTER_ANY,
-	),
-	FILTER_PROPERTY_VERSION => Array(
-		'0' => META_FILTER_ANY,
-	),
-	FILTER_PROPERTY_HIDE_STATUS => Array(
-		'0' => $t_hide_status_default,
-	),
-	FILTER_PROPERTY_MONITOR_USER_ID => Array(
-		'0' => $t_current_user_id,
-	),
-);
-$url_link_parameters['monitored'] = FILTER_PROPERTY_MONITOR_USER_ID . '=' . $t_current_user_id . '&' . FILTER_PROPERTY_HIDE_STATUS . '=' . $t_hide_status_default;
-
-
-$c_filter['feedback'] = array(
-	FILTER_PROPERTY_CATEGORY_ID => Array(
-		'0' => META_FILTER_ANY,
-	),
-	FILTER_PROPERTY_SEVERITY => Array(
-		'0' => META_FILTER_ANY,
-	),
-	FILTER_PROPERTY_STATUS => Array(
-		'0' => config_get( 'bug_feedback_status' ),
-	),
-	FILTER_PROPERTY_HIGHLIGHT_CHANGED => $t_default_show_changed,
-	FILTER_PROPERTY_REPORTER_ID => Array(
-		'0' => $t_current_user_id,
-	),
-	FILTER_PROPERTY_HANDLER_ID => Array(
-		'0' => META_FILTER_ANY,
-	),
-	FILTER_PROPERTY_RESOLUTION => Array(
-		'0' => META_FILTER_ANY,
-	),
-	FILTER_PROPERTY_BUILD => Array(
-		'0' => META_FILTER_ANY,
-	),
-	FILTER_PROPERTY_VERSION => Array(
-		'0' => META_FILTER_ANY,
-	),
-	FILTER_PROPERTY_HIDE_STATUS => Array(
-		'0' => $t_hide_status_default,
-	),
-	FILTER_PROPERTY_MONITOR_USER_ID => Array(
-		'0' => META_FILTER_ANY,
-	),
-);
-$url_link_parameters['feedback'] = FILTER_PROPERTY_REPORTER_ID . '=' . $t_current_user_id . '&' . FILTER_PROPERTY_STATUS . '=' . config_get( 'bug_feedback_status' ) . '&' . FILTER_PROPERTY_HIDE_STATUS . '=' . $t_hide_status_default;
-
-$c_filter['verify'] = array(
-	FILTER_PROPERTY_CATEGORY_ID => Array(
-		'0' => META_FILTER_ANY,
-	),
-	FILTER_PROPERTY_SEVERITY => Array(
-		'0' => META_FILTER_ANY,
-	),
-	FILTER_PROPERTY_STATUS => Array(
-		'0' => $t_bug_resolved_status_threshold,
-	),
-	FILTER_PROPERTY_HIGHLIGHT_CHANGED => $t_default_show_changed,
-	FILTER_PROPERTY_REPORTER_ID => Array(
-		'0' => $t_current_user_id,
-	),
-	FILTER_PROPERTY_HANDLER_ID => Array(
-		'0' => META_FILTER_ANY,
-	),
-	FILTER_PROPERTY_RESOLUTION => Array(
-		'0' => META_FILTER_ANY,
-	),
-	FILTER_PROPERTY_BUILD => Array(
-		'0' => META_FILTER_ANY,
-	),
-	FILTER_PROPERTY_VERSION => Array(
-		'0' => META_FILTER_ANY,
-	),
-	FILTER_PROPERTY_HIDE_STATUS => Array(
-		'0' => $t_hide_status_default,
-	),
-	FILTER_PROPERTY_MONITOR_USER_ID => Array(
-		'0' => META_FILTER_ANY,
-	),
-);
-$url_link_parameters['verify'] = FILTER_PROPERTY_REPORTER_ID . '=' . $t_current_user_id . '&' . FILTER_PROPERTY_STATUS . '=' . $t_bug_resolved_status_threshold;
-
-$c_filter['my_comments'] = array(
-	FILTER_PROPERTY_CATEGORY_ID => Array(
-		'0' => META_FILTER_ANY,
-	),
-	FILTER_PROPERTY_SEVERITY => Array(
-		'0' => META_FILTER_ANY,
-	),
-	FILTER_PROPERTY_STATUS => Array(
-		'0' => META_FILTER_ANY,
-	),
-	FILTER_PROPERTY_HIGHLIGHT_CHANGED => $t_default_show_changed,
-	FILTER_PROPERTY_REPORTER_ID => Array(
-		'0' => META_FILTER_ANY,
-	),
-	FILTER_PROPERTY_HANDLER_ID => Array(
-		'0' => META_FILTER_ANY,
-	),
-	FILTER_PROPERTY_RESOLUTION => Array(
-		'0' => META_FILTER_ANY,
-	),
-	FILTER_PROPERTY_BUILD => Array(
-		'0' => META_FILTER_ANY,
-	),
-	FILTER_PROPERTY_VERSION => Array(
-		'0' => META_FILTER_ANY,
-	),
-	FILTER_PROPERTY_HIDE_STATUS => Array(
-		'0' => $t_hide_status_default,
-	),
-	FILTER_PROPERTY_MONITOR_USER_ID => Array(
-		'0' => META_FILTER_ANY,
-	),
-	FILTER_PROPERTY_NOTE_USER_ID=> Array(
-		'0' => META_FILTER_MYSELF,
-	),
-);
-
-$url_link_parameters['my_comments'] = FILTER_PROPERTY_NOTE_USER_ID. '=' . META_FILTER_MYSELF . '&' . FILTER_PROPERTY_HIDE_STATUS . '=' . $t_hide_status_default;
-$rows = filter_get_bug_rows( $f_page_number, $t_per_page, $t_page_count, $t_bug_count, $c_filter[$t_box_title] );
+$t_filter_arr = filter_deserialize( $t_filter->filter_string );
+$t_rows = filter_get_bug_rows( $f_page_number, $t_per_page, $t_page_count, $t_bug_count, $t_filter_arr );
 
 # Improve performance by caching category data in one pass
 if( helper_get_current_project() == 0 ) {
 	$t_categories = array();
-	foreach( $rows as $t_row ) {
+	foreach( $t_rows as $t_row ) {
 		$t_categories[] = $t_row->category_id;
 	}
 
 	category_cache_array_rows( array_unique( $t_categories ) );
 }
 
-$t_filter = array_merge( $c_filter[$t_box_title], $t_filter );
-
-$box_title = lang_get( 'my_view_title_' . $t_box_title );
-
 # -- ====================== BUG LIST ========================= --
 ?>
 
-<table class="width100 my-buglist" cellspacing="1">
+<div class="my-buglist <?php echo $t_box_css; ?>">
+    <div class="my-buglist-nav">
+	<span class="my-buglist-title"><?php print_link( $t_filter->getUrl(), $t_filter->name, false, 'subtle' ); ?></span>
 <?php
-# -- Navigation header row --?>
-<thead>
-    <tr class="my-buglist-nav">
-<?php
-# -- Viewing range info --?>
-	<td class="form-title" colspan="2">
-<?php
-print_link( 'view_all_set.php?type=1&temporary=y&' . $url_link_parameters[$t_box_title], $box_title, false, 'subtle' );
+		$t_bug_row_count = count( $t_rows );
+		if( $t_bug_row_count > 0 ) {
+			$v_start = $t_filter_arr[FILTER_PROPERTY_ISSUES_PER_PAGE] * ( $f_page_number - 1 ) + 1;
+			$v_end = $v_start + count( $t_rows ) - 1;
+		} else {
+			$v_start = 0;
+			$v_end = 0;
+		} ?>
 
-if( count( $rows ) > 0 ) {
-	$v_start = $t_filter[FILTER_PROPERTY_ISSUES_PER_PAGE] * ( $f_page_number - 1 ) + 1;
-	$v_end = $v_start + count( $rows ) - 1;
-}
-else {
-	$v_start = 0;
-	$v_end = 0;
-}
-echo "<span class=\"my-buglist-count\">($v_start - $v_end / $t_bug_count)</span>";
+	<span class="my-buglist-count">(<?php echo $v_start; ?> - <?php echo $v_end; ?> / <?php echo $t_bug_count; ?>)</span>
+	</div>
+<?php
+$t_count = count( $t_rows );
+if( $t_count > 0 ) {
+	echo "\t<ul class=\"buglist\">\n";
+	for( $j = 0;$j < $t_count; $j++ ) {
+		$t_bug = $t_rows[$j];
+
+		$t_summary = string_display_line_links( $t_bug->summary );
+		$t_last_updated = date( config_get( 'normal_date_format' ), $t_bug->last_updated );
+
+		$t_bug_classes = 'my-buglist-bug';
+		# choose color based on status
+		$status_color = get_status_color( $t_bug->status );
+		$t_bug_classes .= ' bug-status-' . MantisEnum::getLabel( config_get( 'status_enum_string' ), $t_bug->status );
+
+		# Check for attachments
+		$t_attachment_count = 0;
+		if(( file_can_view_bug_attachments( $t_bug->id ) ) ) {
+			$t_attachment_count = file_bug_attachment_count( $t_bug->id );
+		}
+
+		# grab the project name
+		$project_name = project_get_field( $t_bug->project_id, 'name' );
+
+		if ( VS_PRIVATE == $t_bug->view_state ) {
+			$t_bug_classes .= ' my-buglist-private';
+		}
+
+		$t_priority_classes = 'buglist-priority priority-' . MantisEnum::getLabel( config_get( 'priority_enum_string' ), $t_bug->priority );
+		$t_priority_classes .= ( ON == config_get( 'show_priority_text' ) ? '-text' : '-icon' );
+		$t_priority_classes .= ( $t_bug->is_significant() ? ' significant' : '' );
+		$t_pri_str = MantisEnum::getLocalizedLabel( config_get( 'priority_enum_string' ), lang_get( 'priority_enum_string' ), $t_bug->priority );
+
+
+		$t_bug_url = string_get_bug_view_url( $t_bug->id, null );
+		$t_bug_url_title = string_html_specialchars( sprintf( lang_get( 'label' ), lang_get( 'issue_id' ) . $t_bug->id ) . lang_get( 'word_separator' ) . $t_bug->summary );
+		# include project name if viewing 'all projects' or bug is in subproject
+		$t_bug_category = string_display_line( category_full_name( $t_bug->category_id, true, $t_bug->project_id ) );
+		$t_modified_classes = 'last-modified';
+		if( $t_bug->last_updated > strtotime( '-' . $t_filter_arr[FILTER_PROPERTY_HIGHLIGHT_CHANGED] . ' hours' ) ) {
+			$t_modified_classes .= ' changed-recently';
+		}
 ?>
-	</td>
-</tr>
-</thead><tbody>
+		<li class="<?php echo $t_bug_classes; ?>">
+			<span class="buglist-id"><?php print_bug_link( $t_bug->id ); ?></span>
+			<span class="buglist-summary"><a href="<?php echo $t_bug_url; ?>" title="<?php echo $t_bug_url_title; ?>"><?php echo $t_summary; ?></a></span>
+			<span class="buglist-icons">
 <?php
-# -- Loop over bug rows and create $v_* variables --
-$t_count = count( $rows );
-if( $t_count == 0 ) {
-	echo '<tr><td>&#160;</td></tr>';
-}
-for( $i = 0;$i < $t_count; $i++ ) {
-	$t_bug = $rows[$i];
-
-	$t_summary = string_display_line_links( $t_bug->summary );
-	$t_last_updated = date( config_get( 'normal_date_format' ), $t_bug->last_updated );
-
-	# choose color based on status
-	$status_label = MantisEnum::getLabel( config_get('status_enum_string' ), $t_bug->status );
-
-	# Check for attachments
-	$t_attachment_count = 0;
-	# TODO: factor in the allow_view_own_attachments configuration option
-	# instead of just using a global check.
-	if(( file_can_view_bug_attachments( $t_bug->id, null ) ) ) {
-		$t_attachment_count = file_bug_attachment_count( $t_bug->id );
-	}
-
-	# grab the project name
-	$project_name = project_get_field( $t_bug->project_id, 'name' );
-
-	if ( VS_PRIVATE == $t_bug->view_state ) {
-	    $t_bug_class = 'my-buglist-private';
-    } else {
-        $t_bug_class = '';
-    }
-	?>
-
-<tr class="my-buglist-bug <?php echo $t_bug_class?> <?php echo $status_label . '-color'; ?>">
-	<?php
-	# -- Bug ID and details link + Pencil shortcut --?>
-	<td class="center nowrap my-buglist-id">
-		<span class="small">
-		<?php
-			print_bug_link( $t_bug->id );
-
-	echo '<br />';
-
-	if( !bug_is_readonly( $t_bug->id ) && access_has_bug_level( $t_update_bug_threshold, $t_bug->id ) ) {
-		echo '<a class="edit" href="' . string_get_bug_update_url( $t_bug->id ) . '"><img src="' . $t_icon_path . 'update.png' . '" alt="' . lang_get( 'update_bug_button' ) . '" /></a>';
-	}
-
-	if( ON == config_get( 'show_priority_text' ) ) {
-		print_formatted_priority_string( $t_bug->status, $t_bug->priority );
-	} else {
-		print_status_icon( $t_bug->priority );
-	}
-
-	if ( $t_attachment_count > 0 ) {
-		$t_href = string_get_bug_view_url( $t_bug->id ) . '#attachments';
-		$t_href_title = sprintf( lang_get( 'view_attachments_for_issue' ), $t_attachment_count, $t_bug->id );
-		$t_alt_text = $t_attachment_count . lang_get( 'word_separator' ) . lang_get( 'attachments' );
-		echo "<a class=\"attachments\" href=\"$t_href\" title=\"$t_href_title\"><img src=\"${t_icon_path}attachment.png\" alt=\"$t_alt_text\" title=\"$t_alt_text\" /></a>";
-	}
-
-	if( VS_PRIVATE == $t_bug->view_state ) {
-		echo '<img src="' . $t_icon_path . 'protected.gif" width="8" height="15" alt="' . lang_get( 'private' ) . '" />';
-	}
-	?>
-		</span>
-	</td>
-
-	<?php
-	# -- Summary --?>
-	<td class="left my-buglist-description">
-		<?php
-		 	if( ON == config_get( 'show_bug_project_links' ) && helper_get_current_project() != $t_bug->project_id ) {
-				echo '<span class="small project">[', string_display_line( project_get_name( $t_bug->project_id ) ), '] </span>';
-			}
-			$t_bug_url = string_get_bug_view_url( $t_bug->id, null );
-			$t_bug_url_title = string_html_specialchars( sprintf( lang_get( 'label' ), lang_get( 'issue_id' ) . $t_bug->id ) . lang_get( 'word_separator' ) . $t_bug->summary );
-			echo "<span class=\"small summary\"><a href=\"$t_bug_url\" title=\"$t_bug_url_title\">$t_summary</a></span><br />";
-	?>
-		<?php
-	# type project name if viewing 'all projects' or bug is in subproject
-	echo '<span class="small category">', string_display_line( category_full_name( $t_bug->category_id, true, $t_bug->project_id ) ), '</span>';
-
-    echo '<span class="small last-modified"> - ';
-	if( $t_bug->last_updated > strtotime( '-' . $t_filter[FILTER_PROPERTY_HIGHLIGHT_CHANGED] . ' hours' ) ) {
-		echo '<strong>' . $t_last_updated . '</strong>';
-	} else {
-		echo $t_last_updated;
-	}
-	echo '</span>';
-	?>
-	</td>
-</tr>
-<?php
-	# -- end of Repeating bug row --
-}
-
-# -- ====================== end of BUG LIST ========================= --
+		if( !bug_is_readonly( $t_bug->id ) && access_has_bug_level( $t_update_bug_threshold, $t_bug->id ) ) {
 ?>
-</tbody>
-</table>
+				<span class="buglist-edit"><a class="buglist-edit-link" href="<?php echo string_get_bug_update_url( $t_bug->id ); ?>"><?php echo lang_get( 'update_bug_button' ); ?></a></span><?php
+		}
+?>
+				<span class="<?php echo $t_priority_classes; ?>"><?php echo $t_pri_str; ?></span>
+<?php	if ( $t_attachment_count > 0 ) {
+			$t_href = string_get_bug_view_url( $t_bug->id ) . '#attachments';
+			$t_href_title = sprintf( lang_get( 'view_attachments_for_issue' ), $t_attachment_count, $t_bug->id );
+			$t_alt_text = $t_attachment_count . lang_get( 'word_separator' ) . lang_get( 'attachments' );
+?>
+				<span class="buglist-attachments"><a class="buglist-attachments-link" href="<?php echo $t_href; ?>" title="<?php echo $t_href_title; ?>"><?php echo $t_alt_text; ?></a></span>
 <?php
-// Free the memory allocated for the rows in this box since it is not longer needed.
-unset( $rows );
+		}
 
+		if( VS_PRIVATE == $t_bug->view_state ) {
+?>
+				<span class="buglist-private"><?php echo lang_get('private' ); ?></span>
+<?php
+		}
+?>
+			</span>
+<?php
+		 if( ON == config_get( 'show_bug_project_links' ) && helper_get_current_project() != $t_bug->project_id ) {
+?>
+			<span class="buglist-project"><?php echo string_display_line( project_get_name( $t_bug->project_id ) ); ?></span>
+<?php
+		}
+?>
+			<span class="buglist-category"><?php echo $t_bug_category; ?></span>
+				<span class="<?php echo $t_modified_classes; ?>"><?php echo $t_last_updated; ?></span><br />
+		</li>
+<?php # -- end of Repeating bug row --
+	} # -- ====================== end of BUG LIST ========================= --
+
+	echo '</ul>';
+} else {
+	echo '<br/>';
+}
+echo '</div>';
+# Free the memory allocated for the rows in this box since it is not longer needed.
+unset( $t_rows );

@@ -65,8 +65,7 @@ auth_ensure_user_authenticated();
 $f_search		= gpc_get_string( FILTER_PROPERTY_SEARCH, false ); /** @todo need a better default */
 $f_offset		= gpc_get_int( 'offset', 0 );
 
-$t_cookie_value_id = gpc_get_cookie( config_get( 'view_all_cookie' ), '' );
-$t_cookie_value = filter_db_get_filter( $t_cookie_value_id );
+$t_current_filter = MantisStoredQuery::getCurrent();
 
 $f_highlight_changed 	= 0;
 $f_sort 				= null;
@@ -77,14 +76,14 @@ $t_columns = helper_get_columns_to_view( COLUMNS_TARGET_PRINT_PAGE );
 $t_num_of_columns = count( $t_columns );
 
 # check to see if the cookie exists
-if ( !is_blank( $t_cookie_value ) ) {
+if ( !is_blank( $t_current_filter->filter_string ) ) {
 
 	# check to see if new cookie is needed
-	if ( !filter_is_cookie_valid() ) {
+	if ( !filter_is_cookie_valid( $t_current_filter->filter_string ) ) {
 		print_header_redirect( 'view_all_set.php?type=0&print=1' );
 	}
 
-	$t_setting_arr = explode( '#', $t_cookie_value, 2 );
+	$t_setting_arr = explode( '#', $t_current_filter->filter_string, 2 );
 	$t_filter_cookie_arr = unserialize( $t_setting_arr[1] );
 
 	$f_highlight_changed 	= $t_filter_cookie_arr[ FILTER_PROPERTY_HIGHLIGHT_CHANGED ];

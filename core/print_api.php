@@ -1688,3 +1688,17 @@ function print_timezone_option_list( $p_timezone ) {
 		echo "\t</optgroup>\n";
 	}
 }
+
+# --------------------
+# print the access level option list for the query store page
+function print_access_level_filter_option_list( $p_selected = null ) {
+	$t_access_levels_enum_string = config_get( 'access_levels_enum_string' );
+	$t_enum_values = MantisEnum::getValues( $t_access_levels_enum_string );
+
+	foreach ( $t_enum_values as $t_enum_value ) {
+		$t_access_level = get_enum_element( 'access_levels', $t_enum_value );
+		echo '<option value="' . $t_enum_value . '"';
+		check_selected( $p_selected, $t_enum_value );
+		echo '>' . $t_access_level . '</option>';
+	}
+}

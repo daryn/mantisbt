@@ -150,6 +150,22 @@ class BugData {
 	}
 
 	/**
+	 *	Return whether this bug is of significant priority.
+	 *	return bool
+	 */
+	public function is_significant() {
+		$t_priority_threshold = config_get( 'priority_significant_threshold' );
+
+		if( $t_priority_threshold >= 0 &&
+			$this->priority >= $t_priority_threshold &&
+			$this->status < config_get( 'bug_closed_status_threshold' ) ) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	/**
 	 * @private
 	 */
 	public function __set($name, $value) {

@@ -179,9 +179,11 @@ if ( $f_filter_id == 0 ) {
 	$t_custom_filter['sort'] = $c_sort_field;
 } else {
 	# null will be returned if the user doesn't have access right to access the filter.
-	$t_custom_filter = filter_db_get_filter( $f_filter_id, $t_user_id );
-	if ( null === $t_custom_filter ) {
+	$t_filter = MantisStoredQuery::getById( $f_filter_id, $t_user_id );
+	if ( null === $t_filter ) {
 		access_denied();
+	} else {
+		$t_custom_filter = $t_filter->filter_string;
 	}
 
 	$t_custom_filter = filter_deserialize( $t_custom_filter );

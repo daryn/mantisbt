@@ -47,14 +47,18 @@ require_api( 'html_api.php' );
 require_api( 'lang_api.php' );
 require_api( 'print_api.php' );
 require_api( 'rss_api.php' );
+require_js( 'queryStore.js' );
 
 auth_ensure_user_authenticated();
 
-$t_query_arr = filter_db_get_available_queries();
+$t_stored_queries = MantisStoredQuery::getAvailableByAccessLevel();
 
 # Special case: if we've deleted our last query, we have nothing to show here.
-if ( count( $t_query_arr ) < 1 ) {
-	print_header_redirect( 'view_all_bug_page.php' );
+# If i'm on the view all bug page and # click manage filters, I get redirectred
+# to the view all bug page with no indication why it didn't work.
+if ( count( $t_stored_queries ) < 1 ) {
+	error_parameters( helper_get_current_project() );
+	trigger_error( ERROR_FILTER_NO_STORED_QUERIES_FOUND_FOR_PROJECT, WARNING );
 }
 
 compress_enable();
@@ -62,53 +66,25 @@ compress_enable();
 html_page_top();
 
 $t_rss_enabled = config_get( 'rss_enabled' );
-?>
-<br />
-<div>
-<table class="width75" cellspacing="0">
-<?php
-$t_column_count = 0;
-$t_max_column_count = 2;
+$t_filter_preferences = new MantisStoredQueryPreferences();
 
-foreach( $t_query_arr as $t_id => $t_name ) {
-	if ( $t_column_count == 0 ) {
-		print '<tr ' . helper_alternate_class() . '>';
+define( 'QUERY_LIST_INC_ALLOW', true );
+
+$t_access_levels_enum_string = config_get( 'access_levels_enum_string' );
+$t_enum_values = MantisEnum::getValues( $t_access_levels_enum_string );
+ksort( $t_stored_queries );
+foreach( $t_stored_queries AS $t_access_level=>$t_query_arr ) {
+	natcasesort( $t_query_arr );
+	if( $t_access_level === 0 ) {
+		$t_list = 'private';
+		$t_access_label = ucfirst( lang_get( 'private' ) );
+	} else if( $t_access_level == 'default' ) {
+		$t_list = 'default';
+		$t_access_label = lang_get( 'default_queries' );
+	} else {
+		$t_list = MantisEnum::getLabel( $t_access_levels_enum_string, $t_access_level) ;
+		$t_access_label = ucfirst( MantisEnum::getLocalizedLabel( $t_access_levels_enum_string, lang_get( 'access_levels_enum_string' ), $t_access_level) );
 	}
-
-	print '<td>';
-
-	if ( OFF != $t_rss_enabled ) {
-		# Use the "new" RSS link style.
-		print_rss( rss_get_issues_feed_url( null, null, $t_id ), lang_get( 'rss' ) );
-		echo ' ';
-	}
-
-	$t_query_id = db_prepare_int( $t_id );
-	print_link( "view_all_set.php?type=3&source_query_id=$t_query_id", $t_name );
-
-	if ( filter_db_can_delete_filter( $t_id ) ) {
-		echo ' ';
-		print_button( "query_delete_page.php?source_query_id=$t_query_id", lang_get( 'delete_query' ) );
-	}
-
-	print '</td>';
-
-	$t_column_count++;
-	if ( $t_column_count == $t_max_column_count ) {
-		print '</tr>';
-		$t_column_count = 0;
-	}
+	include( dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'query_list_inc.php' );
 }
-
-# Tidy up this row
-if ( ( $t_column_count > 0 ) && ( $t_column_count < $t_max_column_count ) ) {
-	for ( $i = $t_column_count; $i < $t_max_column_count; $i++ ) {
-		print '<td>&#160;</td>';
-	}
-	print '</tr>';
-}
-?>
-</table>
-</div>
-<?php
 html_page_bottom();
