@@ -534,7 +534,7 @@ div.manage-stored-query-delete input, div.manage-stored-query-edit input, div.ma
 	height: 16px;
 	border: none;
 }
-div.manage-stored-query-delete input { background:url(./images/delete.png) no-repeat; }
+div.manage-stored-query-delete input { background:url(/images/delete.png) no-repeat; }
 div.manage-stored-query-edit input { background:url(/images/update.png) no-repeat; }
 
 div.manage-stored-query-list input.list-has-filter { background:url(/images/filter_add_to_menu.png) no-repeat; }
