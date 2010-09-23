@@ -39,7 +39,7 @@ class MantisStoredQuery {
 	/**
 	 *	A list of public, private, and default ids (may be a string in case of a default filter) available to the current user by project
 	 */
-	protected static $_cacheAvailableByProject = array();
+	protected static $_cacheAvailableByProjectByUser = array();
 	protected static $_cacheDefaultsByName = array();
 	/**
 	 *	A list of current filters by project and user.
@@ -501,7 +501,7 @@ class MantisStoredQuery {
 	 *	@param int $p_user_id
 	 *	@return array An array of filter names.  May be empty.
 	 */
-	public static function getAvailable( $p_project_id=null ) {
+	public static function getAvailable( $p_project_id=null, $p_user_id=null ) {
 		$t_filters_table = db_get_table( 'filters' );
 		$t_filters = array();
 
@@ -511,15 +511,20 @@ class MantisStoredQuery {
 			$t_project_id = db_prepare_int( $p_project_id );
 		}
 
-		$t_user_id = auth_get_current_user_id();
+		if( null === $p_user_id ) {
+			$t_user_id = auth_get_current_user_id();
+		} else {
+			$t_user_id = db_prepare_int( $p_user_id );
+		}
 
-		if( !array_key_exists( $t_project_id, self::$_cacheAvailableByProject ) ) {
+		if( !array_key_exists( $t_project_id, self::$_cacheAvailableByProjectByUser )
+				|| ( array_key_exists( $t_project_id, self::$_cacheAvailableByProjectByUser ) && !array_key_exists( $t_user_id, self::$_cacheAvailableByProjectByUser[$t_project_id] ) ) ) {
 			$t_user_access_level = user_get_access_level( $t_user_id, $t_project_id );
 
 			# If the user doesn't have access rights to stored queries, just return
-			if( !access_has_project_level( config_get( 'stored_query_use_threshold' ) ) ) {
-				self::$_cacheAvailableByProject[$t_project_id] = array();
-				return self::$_cacheAvailableByProject[$t_project_id];
+			if( $t_project_id != ALL_PROJECTS && !access_has_project_level( config_get( 'stored_query_use_threshold' ), $t_project_id, $t_user_id ) ) {
+				self::$_cacheAvailableByProjectByUser[$t_project_id][$t_user_id] = array();
+				return self::$_cacheAvailableByProjectByUser[$t_project_id][$t_user_id];
 			}
 
 			# Get the list of available queries. By sorting such that public queries are
@@ -549,7 +554,6 @@ class MantisStoredQuery {
 			$t_query .= " AND access_level IS NULL ) )";
 
 			$t_query .= " ORDER BY is_public DESC, access_level ASC, name ASC";
-
 			$t_result = db_query_bound( $t_query, $t_params );
 			$t_query_count = db_num_rows( $t_result );
 
@@ -568,10 +572,9 @@ class MantisStoredQuery {
 					$t_filters[$t_id] = array( 'id'=>$t_id, 'name'=>lang_get( 'my_view_title_' . $t_id ), 'access_level'=>'default' );
 				}
 			}
-			self::$_cacheAvailableByProject[$t_project_id] = $t_filters;
+			self::$_cacheAvailableByProjectByUser[$t_project_id][$t_user_id] = $t_filters;
 		}
-
-		return self::$_cacheAvailableByProject[$t_project_id];
+		return self::$_cacheAvailableByProjectByUser[$t_project_id][$t_user_id];
 	}
 
 	/**
@@ -715,9 +718,8 @@ class MantisStoredQuery {
 					# only use actual stored queries. no defaults in the menu
 					if( is_numeric( $t_key ) ) {
 						$t_filter = self::getById( $t_key );
+						$t_filters[$t_key] = $t_filter->name;
 					}
-					#$t_filters[$t_filter->access_level][$t_key] = $t_filter;
-					$t_filters[$t_key] = $t_filter->name;
 				}
 			}
 		} else {
