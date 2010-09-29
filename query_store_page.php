@@ -111,7 +111,20 @@ print lang_get( 'query_name_label' ) . lang_get( 'word_separator' );
 		<label for="all-projects-field"><?php print lang_get( 'all_projects_label' ); ?></label>
 		<input type="checkbox" id="all-projects-field" name="all_projects" value="on" <?php check_checked( ALL_PROJECTS == helper_get_current_project() ) ?> />
 	</div>
+
 <?php
+$t_filter_preferences = new MantisStoredQueryPreferences();
+?>
+	<div id="mylist">
+		<label for="mylist-field"><?php echo string_attribute( lang_get( 'add_query_to_mylist' ) ); ?></label>
+		<input type="checkbox" id="mylist-field" name="mylist" value="on" <?php check_checked( $t_filter_preferences->myListHasFilter( $t_source_query_id ) ); ?> />
+	</div>
+	<div id="myview">
+		<label for="myview-field"><?php echo string_attribute( lang_get( 'add_query_to_myview' ) ); ?></label>
+		<input type="checkbox" id="myview-field" name="myview" value="on" <?php check_checked( $t_filter_preferences->myViewHasFilter( $t_source_query_id ) ); ?> />
+	</div>
+<?php
+
 if ( access_has_project_level( config_get( 'stored_query_create_shared_threshold' ) ) ) {
 ?>
 	<div id="filter-access">

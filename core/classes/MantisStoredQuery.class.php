@@ -222,7 +222,26 @@ class MantisStoredQuery {
 				$this->original_project_id = $this->project_id;
 				$this->save();
 			}
-			if( $p_is_named ) {
+			if( $this->name != '') {
+				# the filter was successfully updated so set the preferences for it now
+				# we need to do it here so that we have a valid id for new stored filters
+				$t_prefs = new MantisStoredQueryPreferences( $this->project_id );
+				$f_query_in_list = gpc_get_bool( 'mylist' );
+				$f_query_in_myview = gpc_get_bool( 'myview' );
+
+				if( $f_query_in_list && !$t_prefs->myListHasFilter( $this->id ) ) {
+					$t_prefs->addMyListFilter( $this->id );
+				} else if( !$f_query_in_list && $t_prefs->myListHasFilter( $this->id ) ) {
+					$t_prefs->removeMyListFilter( $this->id );
+				}
+				if( $f_query_in_myview && !$t_prefs->myViewHasFilter( $this->id ) ) {
+					$t_prefs->addMyViewFilter( $this->id );
+				} else if( !$f_query_in_myview && $t_prefs->myViewHasFilter( $this->id ) ) {
+					$t_prefs->removeMyViewFilter( $this->id );
+				}
+				$t_prefs->saveMyList();
+				$t_prefs->saveMyView();
+
 				# update cached filter name
 				self::$_cacheNamesById[$this->id] = $this->name;
 			}

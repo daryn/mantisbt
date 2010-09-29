@@ -153,7 +153,7 @@ span.switch-view:before { content: "[" }
 span.permalink:after,
 span.switch-view:after { content: "]" }
 
-#content { clear: both; position: relative; top: 0; margin: 0; padding: .5em; }
+#content { clear: both; position: relative;         margin: 0; margin-top: 4.25em; margin-bottom: 5em; padding: 0 .5em; }
 .recently-visited { position: relative; top: -2.5em; float: right; text-align: right; font-size: x-small; }
 
 br { clear:both; }
@@ -278,7 +278,7 @@ td.tainted input.checkbox { background-color: red; color: red; border: 1px solid
 td.tainted input.checkbox:before { padding: 1.5em; content: ' * '; }
 select.tainted { background-color: #ffffff; color: red; }
 
-#filter_open, #filter_closed { position: relative; border: 1px solid #000; padding: 0; margin: 0; }
+#filter_open, #filter_closed { clear: both; position: relative; border: 1px solid #000; padding: 0; margin: 0;  }
 #filter_open_link, #filter_closed_link { float: left; position: relative; top: 1em; padding: 0 .5em; margin: 0; }
 .search-box { float: left; position: relative; padding: 0; margin: 0; }
 .search-box, .save-query, .submit-query, .stored-queries, .manage-queries { top: .3em; }
@@ -494,9 +494,9 @@ ul.project-list li span.access-level, ul.project-list li span.view-state { displ
 #filter-access { margin: 0; padding: 0; }
 #save-filter { width: 60%; margin: 0 auto; }
 #query-exists-msg { margin: .5em; }
-#filter-access div { clear: both; }
-#filter-access label, #all-projects label { display: block; width: 10em; float: left; text-align: right; }
-#filter-access input, #all-projects input { display: block; float: left; }
+#filter-access div, #myview, #mylist { clear: both; }
+#filter-access label, #all-projects label, #myview label, #mylist label { display: block; width: 10em; float: left; text-align: right; }
+#filter-access input, #all-projects input, #myview input, #mylist input { display: block; float: left; }
 #filter-buttons { clear: both; float: left; margin: 0; padding: 0; }
 #filter-go-back{ float: left; }
 
