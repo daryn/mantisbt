@@ -55,7 +55,6 @@ require_api( 'print_api.php' );
 require_api( 'user_api.php' );
 require_css( 'status_config.php' );
 require_css( 'myview.css' );
-require_js( 'myView.js' );
 
 auth_ensure_user_authenticated();
 

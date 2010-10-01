@@ -39,6 +39,10 @@ if (a!= -1) {
 style_display = 'block';
 
 $(document).ready( function() {
+	$(window).resize( function() {
+		addWidthClass();
+	});
+	addWidthClass();
 	/* Global Tag change event added only if #tag_select exists */
 	$('#tag_select').live('change', function() {
 		var selected_tag = $('#tag_select option:selected').text();
@@ -304,4 +308,23 @@ function tag_string_append( p_string ) {
 		t_tag_string.val( t_tag_string.val() + p_string );
 	}
 	t_tag_select.val(0);
+}
+function addWidthClass() {
+	/* Remove any existing width classes */
+	$('body').removeClass( 'width-800' );
+	$('body').removeClass( 'width-1024' );
+	$('body').removeClass( 'width-1280' );
+	$('body').removeClass( 'width-wide' );
+
+	var docWidth = $(window).width();
+	if( docWidth <= 800 ) {
+		$('body').addClass( 'width-800' );
+	} else if ( docWidth <= 1024 ) {
+		$('body').addClass( 'width-1024' );
+	} else if ( docWidth <= 1280 ) {
+		$('body').addClass( 'width-1280' );
+	} else {
+		$('body').addClass( 'width-wide' );
+	}
+
 }
