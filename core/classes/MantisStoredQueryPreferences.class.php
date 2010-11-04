@@ -55,10 +55,18 @@ class MantisStoredQueryPreferences {
 		}
 	}
 	public function myViewHasFilter( $p_filter_id ) {
-		return in_array( $p_filter_id, $this->myview_filters );
+		if( is_array( $this->myview_filters ) ) {
+			return in_array( $p_filter_id, $this->myview_filters );
+		} else {
+			return false;
+		}
 	}
 	public function myListHasFilter( $p_filter_id ) {
-		return in_array( $p_filter_id, $this->mylist_filters );
+		if( is_array( $this->mylist_filters ) ) {
+			return in_array( $p_filter_id, $this->mylist_filters );
+		} else {
+			return false;
+		}
 	}
 	public function addMyViewFilter( $p_query_id ) {
 		$this->myview_filters[] = $p_query_id;

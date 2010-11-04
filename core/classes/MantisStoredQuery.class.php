@@ -101,12 +101,14 @@ class MantisStoredQuery {
 
 				# If not overwriting, make sure they don't already have a query with the same name
 				$t_stored_queries = self::getAvailable();
-				foreach( $t_stored_queries as $t_id => $t_query_arr ) {
-					# default filters have a string key and can be ignored for this
-					if( is_numeric( $t_id ) ) {
-						foreach( $t_query_arr AS $t_name ) {
-							if ( $this->name === $t_name ) {
-								trigger_error( ERROR_FILTER_NAME_DUPLICATE, ERROR );
+				if( count( $t_stored_queries ) > 0 ) {
+					foreach( $t_stored_queries as $t_id => $t_query_arr ) {
+						# default filters have a string key and can be ignored for this
+						if( is_numeric( $t_id ) ) {
+							foreach( $t_query_arr AS $t_name ) {
+								if ( $this->name === $t_name ) {
+									trigger_error( ERROR_FILTER_NAME_DUPLICATE, ERROR );
+								}
 							}
 						}
 					}
@@ -351,7 +353,7 @@ class MantisStoredQuery {
 			} else if ( $p_filter_name == 'monitored' && ( !access_has_project_level( config_get( 'monitor_bug_threshold' ), $t_project_id, $t_current_user_id ) ) ) {
 				self::$_cacheDefaultsByName[$p_filter_name] = false;
 				return false;
-			} else if ( $p_filter_name == 'assigned' && user_get_assigned_open_bug_count( $t_current_user_id, $t_project_id ) == 0 ) {
+			} else if ( $p_filter_name == 'assigned' && ( !access_has_project_level( config_get( 'handle_bug_threshold' ), $t_project_id, $t_current_user_id ) ) ) {
 				# don't display "Assigned to Me" bugs to users that bugs can't be assigned to
 				self::$_cacheDefaultsByName[$p_filter_name] = false;
 				return false;
@@ -591,8 +593,10 @@ class MantisStoredQuery {
 		}
 		$t_filters = array();
 		$t_available = self::getAvailable( $t_project_id );
-		foreach( $t_available AS $t_row ) {
-			$t_filters[$t_row['access_level']][$t_row['id']] = $t_row['name'];
+		if( count( $t_available ) > 0 ) {
+			foreach( $t_available AS $t_row ) {
+				$t_filters[$t_row['access_level']][$t_row['id']] = $t_row['name'];
+			}
 		}
 		return $t_filters;
 	}
@@ -610,8 +614,10 @@ class MantisStoredQuery {
 		}
 		$t_filters = array();
 		$t_available = self::getAvailable( $t_project_id );
-		foreach( $t_available AS $t_row ) {
-			$t_filters[$t_row['id']] = $t_row['name'];
+		if( count( $t_available ) > 0 ) {
+			foreach( $t_available AS $t_row ) {
+				$t_filters[$t_row['id']] = $t_row['name'];
+			}
 		}
 		return $t_filters;
 	}
@@ -657,8 +663,10 @@ class MantisStoredQuery {
 		}
 
 		$t_myview_ids = config_get( 'myview_filters', array(), $t_user_id, $t_project_id );
-		foreach( $t_myview_ids AS $t_id ) {
-			$t_sort_arr[$t_id] = self::getNameById( $t_id );
+		if( is_array( $t_myview_ids ) && count( $t_myview_ids ) > 0 ) {
+			foreach( $t_myview_ids AS $t_id ) {
+				$t_sort_arr[$t_id] = self::getNameById( $t_id );
+			}
 		}
 		if( is_array( $t_sort_arr ) ) {
 			natcasesort( $t_sort_arr );
@@ -680,11 +688,13 @@ class MantisStoredQuery {
 		} else {
 			# load up the defaults
 			$t_available = self::getAvailable( $t_project_id );
-			foreach( $t_available AS $t_key=>$t_name ) {
-				if( !is_numeric( $t_key ) ) {
-					$t_filter = self::getNamedDefault( $t_key );
-					if( $t_filter ) {
-						$t_filters[$t_key] = $t_filter;
+			if( count( $t_available ) > 0 ) {
+				foreach( $t_available AS $t_key=>$t_name ) {
+					if( !is_numeric( $t_key ) ) {
+						$t_filter = self::getNamedDefault( $t_key );
+						if( $t_filter ) {
+							$t_filters[$t_key] = $t_filter;
+						}
 					}
 				}
 			}
@@ -725,11 +735,13 @@ class MantisStoredQuery {
 		} else {
 			# load up the whole list (minus defaults)
 			$t_available = self::getAvailable( $t_project_id );
-			foreach( $t_available AS $t_key=>$t_name ) {
-				if( is_numeric( $t_key ) ) {
-					$t_filter = self::getById( $t_key );
-					#$t_filters[$t_filter->access_level][$t_key] = $t_filter;
-					$t_filters[$t_key] = $t_filter->name;
+			if( count( $t_available ) > 0 ) {
+				foreach( $t_available AS $t_key=>$t_name ) {
+					if( is_numeric( $t_key ) ) {
+						$t_filter = self::getById( $t_key );
+						#$t_filters[$t_filter->access_level][$t_key] = $t_filter;
+						$t_filters[$t_key] = $t_filter->name;
+					}
 				}
 			}
 		}
