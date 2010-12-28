@@ -14,7 +14,7 @@
 /**
 	\mainpage
 	
-	 @version V5.11 5 May 2010   (c) 2000-2010 John Lim (jlim#natsoft.com). All rights reserved.
+	 @version V5.10 10 Nov 2009   (c) 2000-2009 John Lim (jlim#natsoft.com). All rights reserved.
 
 	Released under both BSD license and Lesser GPL library license. You can choose which license
 	you prefer.
@@ -177,7 +177,7 @@
 		/**
 		 * ADODB version as a string.
 		 */
-		$ADODB_vers = 'V5.11 5 May 2010  (c) 2000-2010 John Lim (jlim#natsoft.com). All rights reserved. Released BSD & LGPL.';
+		$ADODB_vers = 'V5.10 10 Nov 2009  (c) 2000-2009 John Lim (jlim#natsoft.com). All rights reserved. Released BSD & LGPL. MantisBT Version';
 	
 		/**
 		 * Determines whether recordset->RecordCount() is used. 
@@ -403,7 +403,6 @@
 	var $fetchMode=false;
 	
 	var $null2null = 'null'; // in autoexecute/getinsertsql/getupdatesql, this value will be converted to a null
-	var $bulkBind = false; // enable 2D Execute array
 	 //
 	 // PRIVATE VARS
 	 //
@@ -436,9 +435,7 @@
 	{
 	global $ADODB_vers;
 	
-		$ok = preg_match( '/^[Vv]([0-9\.]+)/', $ADODB_vers, $matches );
-		if (!$ok) return (float) substr($ADODB_vers,1);
-		else return $matches[1];
+		return (float) substr($ADODB_vers,1);
 	}
 	
 	/**
@@ -514,15 +511,15 @@
 	{
 		if ($argHostname != "") $this->host = $argHostname;
 		if ($argUsername != "") $this->user = $argUsername;
-		if ($argPassword != "") $this->password = 'not stored'; // not stored for security reasons
+		if ($argPassword != "") $this->password = $argPassword; // not stored for security reasons
 		if ($argDatabaseName != "") $this->database = $argDatabaseName;		
 		
 		$this->_isPersistentConnection = false;	
 			
 		if ($forceNew) {
-			if ($rez=$this->_nconnect($this->host, $this->user, $argPassword, $this->database)) return true;
+			if ($rez=$this->_nconnect($this->host, $this->user, $this->password, $this->database)) return true;
 		} else {
-			 if ($rez=$this->_connect($this->host, $this->user, $argPassword, $this->database)) return true;
+			 if ($rez=$this->_connect($this->host, $this->user, $this->password, $this->database)) return true;
 		}
 		if (isset($rez)) {
 			$err = $this->ErrorMsg();
@@ -580,12 +577,12 @@
 		
 		if ($argHostname != "") $this->host = $argHostname;
 		if ($argUsername != "") $this->user = $argUsername;
-		if ($argPassword != "") $this->password = 'not stored';
+		if ($argPassword != "") $this->password = $argPassword;
 		if ($argDatabaseName != "") $this->database = $argDatabaseName;		
 			
 		$this->_isPersistentConnection = true;	
 		
-		if ($rez = $this->_pconnect($this->host, $this->user, $argPassword, $this->database)) return true;
+		if ($rez = $this->_pconnect($this->host, $this->user, $this->password, $this->database)) return true;
 		if (isset($rez)) {
 			$err = $this->ErrorMsg();
 			if (empty($err)) $err = "Connection error to server '$argHostname' with user '$argUsername'";
@@ -719,7 +716,7 @@
 	*  @param $table	name of table to lock
 	*  @param $where	where clause to use, eg: "WHERE row=12". If left empty, will escalate to table lock
 	*/
-	function RowLock($table,$where,$col='1 as adodbignore')
+	function RowLock($table,$where,$col='1 as ignore')
 	{
 		return false;
 	}
@@ -953,7 +950,7 @@
 			
 			$element0 = reset($inputarr);
 			# is_object check because oci8 descriptors can be passed in
-			$array_2d = $this->bulkBind && is_array($element0) && !is_object(reset($element0));
+			$array_2d = is_array($element0) && !is_object(reset($element0));
 			//remove extra memory copy of input -mikefedyk
 			unset($element0);
 			
@@ -1304,8 +1301,8 @@
 		$ADODB_COUNTRECS = false;
 			
 
-		if ($secs2cache != 0) $rs = $this->CacheExecute($secs2cache,$sql,$inputarr);
-		else $rs = $this->Execute($sql,$inputarr);
+			if ($secs2cache != 0) $rs = $this->CacheExecute($secs2cache,$sql,$inputarr);
+			else $rs = $this->Execute($sql,$inputarr);
 		
 		$ADODB_COUNTRECS = $savec;
 		if ($rs && !$rs->EOF) {
@@ -1707,17 +1704,17 @@
 	function CacheFlush($sql=false,$inputarr=false)
 	{
 	global $ADODB_CACHE_DIR, $ADODB_CACHE;
-		
+
 		if (empty($ADODB_CACHE)) return false;
 		
 		if (!$sql) {
 			 $ADODB_CACHE->flushall($this->debug);
-	         return;
-	    }
-		
-		$f = $this->_gencachename($sql.serialize($inputarr),false);
+         return;
+      }
+
+      $f = $this->_gencachename($sql.serialize($inputarr),false);
 		return $ADODB_CACHE->flushcache($f, $this->debug);
-	}
+   }
    
 	
 	/**
@@ -1781,7 +1778,7 @@
 			$sqlparam = $sql;
 			
 		
-		$md5file = $this->_gencachename($sql.serialize($inputarr),true);
+			$md5file = $this->_gencachename($sql.serialize($inputarr),true);
 		$err = '';
 		
 		if ($secs2cache > 0){
@@ -2441,7 +2438,7 @@ http://www.stanford.edu/dept/itss/docs/oracle/10g/server.101/b10759/statements_1
 	{
 		if (empty($d) && $d !== 0) return 'null';
 		if ($isfld) return $d;
-		
+
 		if (is_object($d)) return $d->format($this->fmtDate);
 		
 		
@@ -2483,7 +2480,7 @@ http://www.stanford.edu/dept/itss/docs/oracle/10g/server.101/b10759/statements_1
 		if (empty($ts) && $ts !== 0) return 'null';
 		if ($isfld) return $ts;
 		if (is_object($ts)) return $ts->format($this->fmtTimeStamp);
-		
+
 		# strlen(14) allows YYYYMMDDHHMMSS format
 		if (!is_string($ts) || (is_numeric($ts) && strlen($ts)<14)) 
 			return adodb_date($this->fmtTimeStamp,$ts);
@@ -2540,8 +2537,8 @@ http://www.stanford.edu/dept/itss/docs/oracle/10g/server.101/b10759/statements_1
 		if ($rr[1] <= TIMESTAMP_FIRST_YEAR && $rr[2]<= 1) return 0;
 	
 		// h-m-s-MM-DD-YY
-		if (!isset($rr[5])) return  adodb_mktime(0,0,0,$rr[2],$rr[3],$rr[1]);
-		return  @adodb_mktime($rr[5],$rr[6],$rr[7],$rr[2],$rr[3],$rr[1]);
+		if (!isset($rr[5])) return  adodb_mktime(0,0,0,(int)$rr[2],(int)$rr[3],(int)$rr[1]);
+		return  @adodb_mktime((int)$rr[5],(int)$rr[6],(int)$rr[7],(int)$rr[2],(int)$rr[3],(int)$rr[1]);
 	}
 	
 	/**
@@ -4152,25 +4149,11 @@ http://www.stanford.edu/dept/itss/docs/oracle/10g/server.101/b10759/statements_1
 				// special handling of oracle, which might not have host
 				$fakedsn = str_replace('@/','@adodb-fakehost/',$fakedsn);
 			}
-			
-			 if ((strpos($origdsn, 'sqlite')) !== FALSE) {
-             // special handling for SQLite, it only might have the path to the database file.
-             // If you try to connect to a SQLite database using a dsn like 'sqlite:///path/to/database', the 'parse_url' php function
-             // will throw you an exception with a message such as "unable to parse url"
-                list($scheme, $path) = explode('://', $origdsn);
-                $dsna['scheme'] = $scheme;
-				if ($qmark = strpos($path,'?')) {
-					$dsn['query'] = substr($path,$qmark+1);
-					$path = substr($path,0,$qmark);
-				}
-            	$dsna['path'] = '/' . urlencode($path);
-			} else
 				$dsna = @parse_url($fakedsn);
-				
 			if (!$dsna) {
 				return $false;
 			}
-			$dsna['scheme'] = substr($origdsn,0,$at);
+				$dsna['scheme'] = substr($origdsn,0,$at);
 			if ($at2 !== FALSE) {
 				$dsna['host'] = '';
 			}
@@ -4183,7 +4166,7 @@ http://www.stanford.edu/dept/itss/docs/oracle/10g/server.101/b10759/statements_1
 					if ($sch[1] == 'sqlite')
 						$dsna['host'] = rawurlencode($sch[1].':'.rawurldecode($dsna['host']));
 					else
-						$dsna['host'] = rawurlencode($sch[1].':host='.rawurldecode($dsna['host']));
+					$dsna['host'] = rawurlencode($sch[1].':host='.rawurldecode($dsna['host']));
 					$dsna['scheme'] = 'pdo';
 				}
 			}
