@@ -996,7 +996,46 @@ function filter_get_query_sort_data( &$p_filter, $p_show_sticky, $p_query_clause
 				if ( 'last_updated' == $c_sort ) {
 					$c_sort = "last_updated";
 				}
-				$p_query_clauses['order'][] = "$t_bug_table.$c_sort $c_dir";
+
+				$t_user_table = db_get_table( 'user' );
+				$t_sort_by_last_name = ( ON == config_get( 'sort_by_last_name' ) ? true:false );
+				$t_user_sort = false;
+				switch( $c_sort ) {
+					case FILTER_PROPERTY_REPORTER_ID:
+						$t_user_sort = true;
+						$t_join_field = "$t_bug_table.reporter_id";
+					break;
+					case FILTER_PROPERTY_HANDLER_ID:
+						$t_user_sort = true;
+						$t_join_field = "$t_bug_table.handler_id";
+					break;
+					case FILTER_PROPERTY_CATEGORY_ID:
+						$t_category_table = db_get_table( 'category' );
+						$p_query_clauses['select'][] = "$t_category_table.name AS category";
+						$p_query_clauses['join'][] = "LEFT JOIN $t_category_table ON $t_bug_table.category_id=$t_category_table.id AND ( $t_bug_table.project_id=$t_category_table.project_id OR $t_category_table.project_id=0 )";
+						$t_sort_field = "category";
+					break;
+					default:
+						$t_sort_field = "$t_bug_table.$c_sort";
+					break;
+				}
+				if( $t_user_sort ) {
+					if ( ON == config_get( 'show_realname' ) ) {
+						if( $t_sort_by_last_name ) {
+							$p_query_clauses['select'][] = "( SELECT CASE $t_user_table.realname WHEN '' THEN $t_user_table.username
+								ELSE CONCAT( SUBSTRING( $t_user_table.realname, LOCATE( ' ', $t_user_table.realname ) ) , ', ',
+								SUBSTRING( $t_user_table.realname, 0, LOCATE( ' ', $t_user_table.realname ) ) ) END ) AS sort_name";
+						} else {
+							$p_query_clauses['select'][] = "( SELECT CASE $t_user_table.realname WHEN '' THEN $t_user_table.realname ELSE $t_user_table.username END ) AS sort_name";
+						}
+					} else {
+						$p_query_clauses['select'][] = "$t_user_table.username AS sort_name";
+					}
+
+					$p_query_clauses['join'][] = "LEFT JOIN $t_user_table ON $t_join_field=$t_user_table.id";
+					$t_sort_field = "sort_name";
+				}
+				$p_query_clauses['order'][] = "$t_sort_field $c_dir";
 			}
 		}
 	}
