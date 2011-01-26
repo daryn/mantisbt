@@ -319,7 +319,7 @@ function filter_get_permalink_url( $p_custom_filter ) {
  */
 function filter_get_temporary_url( $p_temp_filter ) {
 	$t_query_str = filter_get_url( $p_temp_filter );
-	return ( $t_query_str != '' ? config_get( 'path' ) . 'view_all_set.php?type=1&temporary=y&' . $t_query_str : '' );
+	return ( $t_query_str != '' ? config_get( 'path' ) . 'view_all_set.php?type=1&' . $t_query_str : '' );
 }
 
 /**

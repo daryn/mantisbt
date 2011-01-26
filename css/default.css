@@ -250,6 +250,7 @@ div.quick-summary-right	{ width: 49%; padding: 2px; text-align: right; float: ri
 .progress400 .bar			{ display: block; position: relative; background: #6bba70; text-align: center; font-weight: normal; color: #333; height: 2em; line-height: 2em; }
 
 #footer {
+	clear: both;
 	font-family: Verdana, Arial, Helvetica, sans-serif;
 	font-size: 8pt;
 	margin-top: 2em;
