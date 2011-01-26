@@ -33,7 +33,7 @@ $(document).ready( function() {
 });
 
 function setAccessLevelVisibility() {
-	if( $('#filter-is-public').attr('checked') ) {
+	if( $('#filter-is-public').is(':checked') ) {
 		$('#filter-access-level').show();
 		$('#filter-access-level-label').show();
 	} else {
