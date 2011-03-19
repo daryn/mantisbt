@@ -57,7 +57,7 @@ function check_php_version( $p_version ) {
 function db_null_date() {
 	global $g_db;
 
-	return $g_db->BindTimestamp( $g_db->UserTimeStamp( 1, 'Y-m-d H:i:s', true ) );
+	return "1970-01-01 00:00:01";
 }
 
 /**
