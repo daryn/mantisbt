@@ -1,0 +1,459 @@
+<?php
+# MantisBT - a php based bugtracking system
+
+# Copyright (C) 2002 - 2009  MantisBT Team - mantisbt-dev@lists.sourceforge.
+
+# MantisBT is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# MantisBT is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with MantisBT.  If not, see <http://www.gnu.org/licenses/>.
+
+/**
+ * @copyright Copyright (C) 2000 - 2002  Kenzaburo Ito - kenito@300baud.org
+ * @copyright Copyright (C) 2002 - 2009  MantisBT Team - mantisbt-dev@lists.sourceforge.net
+ * @link http://www.mantisbt.org
+ * @package MantisBT
+ */
+
+
+/**
+ *	MantisUser class to handle loading,printing,modifying user data.
+ *	This should eventually replace most if not all of user api.
+ * @package MantisBT
+ * @subpackage classes
+ */
+class MantisUser {
+
+	protected $username						= null;
+	protected $realname						= '';
+	protected $email						= null;
+	protected $password						= null;
+	protected $date_created					= null;
+	protected $last_visit					= null;
+	protected $enabled						= true;
+	protected $protected					= false;
+	protected $access_level					= null;
+	protected $login_count					= 0;
+	protected $lost_password_request_count 	= 0;
+	protected $failed_login_count			= 0;
+	protected $cookie_string 				= '';
+
+	public static $sort_column = 'username';
+	public static $sort_direction = 'ASC';
+	public static $hide_inactive = false;
+	public static $filter = false;
+	public static $save = 1;
+
+	public static $offset = 0;
+	public static $page_number = 1;
+	public static $page_count = 1;
+	public static $user_count = 0;
+	public static $per_page = 50;
+
+
+	/**
+	 *	Array of user objects by id
+	 *	@static
+	 */
+	public static $_cachUsersById = array();
+
+    /**
+     *	@param string $p_field_name
+     *	@access public
+     */
+    public function __get( $p_field_name ) {
+        switch( $p_field_name ) {
+			case 'email_link':
+				return get_email_link( $this->email, $this->email );
+			break;
+			case 'access_level_label':
+				return get_enum_element( 'access_levels', $this->access_level );
+			break;
+			default:
+				return $this->$p_field_name;
+			break;
+		}
+	}
+
+	/**
+	 */
+	public function canCurrentUserManage() {
+		return access_has_global_level( $this->access_level );
+	}
+
+	private function setFields( $p_row ) {
+		foreach( $p_row AS $t_key=>$t_value ) {
+			if( !is_numeric( $t_key ) ) {
+				if( $t_key == 'date_created' || $t_key == 'last_visit' ) {
+					$this->$t_key = new MantisDate( $t_value, 'normal' );
+				} else {
+					$this->$t_key = $t_value;
+				}
+			}
+		}
+	}
+
+	/**
+	 *	Return a user from cache or load it into the cache from
+	 *	the database and return.
+	 *	@param int $p_id
+	 *	@return user object
+	 *	@access public
+	 *	@static
+	 */
+	public static function load( $p_id ) {
+		if ( !array_key_exists( $p_id, self::$_cachUsersById ) ) {
+			$t_user_table = db_get_table( 'user' );
+
+			$t_query = "SELECT * FROM $t_user_table WHERE id=" . db_param();
+			$t_result = db_query_bound( $t_query, Array( $p_id ) );
+
+			if( 0 == db_num_rows( $t_result ) ) {
+				throw new Exception( ERROR_USER_BY_ID_NOT_FOUND );
+			}
+
+			$t_user = new MantisUser();
+			$t_row = db_fetch_array( $t_result );
+			foreach( $t_row AS $t_field=>$t_value ) {
+				$t_user->$t_field = $t_value;
+			}
+
+			self::$_cachUsersById[$p_id] = $t_user;
+		}
+		return self::$_cachUsersById[$p_id];
+	}
+
+	public static function loadAll() {
+		$t_user_table = db_get_table( 'user' );
+
+		$t_query = "SELECT * FROM $t_user_table ORDER BY " . self::$sort_column . ' ' . self::$sort_direction;
+
+		$t_result = db_query_bound($t_query, null, self::$per_page, self::getFilterOffset());
+
+		while( $t_row = db_fetch_array( $t_result ) ) {
+			$t_user = new MantisUser();
+			$t_user->setFields( $t_row );
+			$t_users[$t_row['id']] = $t_user;
+		}
+
+		return $t_users;
+	}
+
+	/**
+	 *	Filtered
+	 */
+	public static function loadFiltered() {
+		$t_user_table = db_get_table( 'user' );
+		$t_params = array();
+		$t_days_old = 7 * SECONDS_PER_DAY;
+		if( self::$hide_inactive ) {
+			$t_hide = db_helper_compare_days( "" . db_now() . "", "last_visit", "< " . db_param() );
+		} else {
+			$t_hide = '';
+		}
+
+		switch( self::$filter ) {
+			case 'NEW':
+				$t_where = db_helper_compare_days( "" . db_now() . "", "date_created", "<= " .db_param() . "" );
+
+				$t_params[] = $t_days_old;
+				if( self::$hide_inactive ) {
+					$t_hide = ' AND ' . $t_hide;
+					$t_params[] = $t_days_old;
+				}
+				$t_query = "SELECT * FROM $t_user_table WHERE $t_where $t_hide ORDER BY " . self::$sort_column . ' ' . self::$sort_direction;
+			break;
+			case 'UNUSED':
+				$t_where = '(login_count = 0) AND ( date_created = last_visit )';
+
+				if( self::$hide_inactive ) {
+					$t_hide = ' AND ' . $t_hide;
+					$t_params[] = $t_days_old;
+				}
+				$t_query = "SELECT * FROM $t_user_table WHERE $t_where $t_hide ORDER BY " . self::$sort_column . ' ' . self::$sort_direction;
+			break;
+			case 'ALL':
+				if( self::$hide_inactive ) {
+					$t_hide = 'WHERE ' . $t_hide;
+					$t_params[] = $t_days_old;
+				}
+				$t_query = "SELECT * FROM $t_user_table $t_hide ORDER BY " . self::$sort_column . ' ' . self::$sort_direction;
+			break;
+			default:
+				$t_params[] = self::$filter . '%';
+				if( self::$hide_inactive ) {
+					$t_hide = ' AND ' . $t_hide;
+					$t_params[] = $t_days_old;
+				}
+				$t_query = "SELECT * FROM $t_user_table WHERE username LIKE " . db_param() . $t_hide;
+			break;
+		}
+
+		$t_result = db_query_bound( $t_query, $t_params, self::$per_page, self::getFilterOffset() );
+		while( $t_row = db_fetch_array( $t_result ) ) {
+			$t_user = new MantisUser();
+			$t_user->setFields( $t_row );
+			$t_users[$t_row['id']] = $t_user;
+		}
+		return $t_users;
+	}
+
+	public static function getFilteredCount( $p_filter ) {
+		$t_user_table = db_get_table( 'user' );
+		$t_params = array();
+		$t_days_old = 7 * SECONDS_PER_DAY;
+		if( self::$hide_inactive ) {
+			$t_hide = db_helper_compare_days( "" . db_now() . "", "last_visit", "< " . db_param() );
+		} else {
+			$t_hide = '';
+		}
+
+		switch( $p_filter ) {
+			case 'NEW':
+				$t_where = db_helper_compare_days( "" . db_now() . "", "date_created", "<= " .db_param() . "" );
+
+
+				$t_params[] = $t_days_old;
+				if( self::$hide_inactive ) {
+					$t_params[] = $t_days_old;
+					$t_hide = ' AND ' . $t_hide;
+				}
+				$t_query = "SELECT COUNT(id) FROM $t_user_table WHERE $t_where $t_hide ORDER BY " . self::$sort_column . ' ' . self::$sort_direction;
+			break;
+			case 'UNUSED':
+				$t_where = '(login_count = 0) AND ( date_created = last_visit )';
+
+				if( self::$hide_inactive ) {
+					$t_hide = ' AND ' . $t_hide;
+					$t_params[] = $t_days_old;
+				}
+				$t_query = "SELECT COUNT(id) FROM $t_user_table WHERE $t_where $t_hide ORDER BY " . self::$sort_column . ' ' . self::$sort_direction;
+			break;
+			case 'ALL':
+				if( self::$hide_inactive ) {
+					$t_hide = 'WHERE ' . $t_hide;
+					$t_params[] = $t_days_old;
+				}
+				$t_query = "SELECT COUNT(id) FROM $t_user_table $t_hide ORDER BY " . self::$sort_column . ' ' . self::$sort_direction;
+			break;
+			default:
+				$t_params[] = self::$filter . '%';
+				if( self::$hide_inactive ) {
+					$t_hide = ' AND ' . $t_hide;
+					$t_params[] = $t_days_old;
+				}
+				$t_query = "SELECT COUNT(id) FROM $t_user_table WHERE username LIKE " . db_param() . $t_hide;
+			break;
+		}
+
+		$t_result = db_query_bound( $t_query, $t_params );
+		$t_count = db_result( $t_result );
+		if( $p_filter == self::$filter ) {
+			self::$user_count = $t_count;
+		}
+		return $t_count;
+	}
+
+	/**
+	 *	@access public
+	 *	@static
+	 */
+	public static function loadArray( $p_user_id_array ) {
+		$query = "SELECT *
+				  FROM $t_user_table
+				  WHERE id IN (" . implode( ',', $p_user_id_array ) . ')';
+		$result = db_query_bound( $query );
+
+		$t_users = array();
+		while( $t_row = db_fetch_array( $t_result ) ) {
+			if ( array_key_exists( $t_row['id'], self::$users ) ) {
+				$t_users[$t_row['id']] = self::$users[$t_row['id']];
+			} else {
+				$t_user = new MantisUser();
+				$t_user->setFields( $t_row );
+				$t_users[$t_user->id] = $t_user;
+				self::$_cachUsersById[$t_user->id] = $t_user;
+			}
+		}
+		return $t_users;
+	}
+
+	public static function processManageUserFilter() {
+		$t_user_table = db_get_table( 'user' );
+
+		$f_sort_column = gpc_get_string( 'sort_column', 'username' );
+		# Clean up the form variables
+		if ( !db_field_exists( $f_sort_column, $t_user_table ) ) {
+			$c_sort_column = 'username';
+		} else {
+			$c_sort_column = addslashes($f_sort_column);
+		}
+
+		self::$sort_column = $c_sort_column;
+		self::$sort_direction  = gpc_get_string( 'sort_direction', 'ASC' );
+		self::$hide_inactive = gpc_get_bool( 'hide_inactive' );
+		self::$save = gpc_get_bool( 'save' );
+		self::$page_number = gpc_get_int( 'page_number', 1 );
+		self::$filter = utf8_strtoupper( gpc_get_string( 'filter', config_get( 'default_manage_user_prefix' ) ) );
+	}
+
+	public static function pageCount( $p_per_page ) {
+		return ceil( self::$user_count / $p_per_page);
+	}
+
+	public static function getValidPageNumber() {
+		if ( self::$page_number > self::$page_count ) {
+			self::$page_number = self::$page_count;
+		}
+
+		# Make sure $p_page_number isn't before the first page
+		if ( self::$page_number < 1 ) {
+			self::$page_number = 1;
+		}
+		return self::$page_number;
+	}
+
+	public static function getFilterOffset() {
+		return self::$offset = ( ( self::$page_number - 1 ) * self::$per_page  );
+	}
+
+	public static function getFilterLinks() {
+		# build array for filter shortcuts
+		$t_filter_url = "manage_user_page.php?sort_column=" . self::$sort_column . "&sort_direction=" . self::$sort_direction . "&save=1&hide_inactive=" . self::$hide_inactive . "&filter=";
+		$t_selected = ( !self::$filter || 'ALL' == self::$filter ? true : false );
+		$t_filter_links['ALL'] = array( 'label'=>lang_get( 'show_all_users' ), 'url'=>$t_filter_url . 'ALL', 'selected'=>$t_selected);
+
+		for ( $i = 'A'; $i != 'AA'; $i++ ) {
+			$t_selected = ( $i == self::$filter ? true : false );
+			$t_filter_links[$i] = array( 'label'=>$i, 'url'=>$t_filter_url . $i, 'selected'=>$t_selected );
+		}
+
+		for ( $i = 0; $i <= 9; $i++ ) {
+			$t_selected = ( $i === self::$filter ? true : false );
+			$t_filter_links[$i] = array( 'label'=>$i, 'url'=>$t_filter_url . $i, 'selected'=>$t_selected );
+		}
+
+		$t_selected = ( 'UNUSED' == self::$filter ? true : false );
+		$t_filter_links['UNUSED'] = array( 'label'=>lang_get( 'users_unused' ), 'url'=>$t_filter_url . 'UNUSED', 'selected'=>$t_selected );
+		$t_selected = ( 'NEW' == self::$filter ? true : false );
+		$t_filter_links['NEW'] = array( 'label'=>lang_get( 'users_new' ), 'url'=>$t_filter_url . 'NEW', 'selected'=>$t_selected );
+
+		return $t_filter_links;
+	}
+
+	/**
+	 *	Build an array of data for sorting the user columns
+	 *	@return array data for sorting the user columns
+	 */
+	public static function getFilterSortLinks() {
+
+		$t_page = "manage_user_page.php?";
+
+		$t_sort_fields['username'] = array();
+		$t_sort_fields['realname'] = array();
+		$t_sort_fields['email'] = array();
+		$t_sort_fields['access_level'] = array();
+		$t_sort_fields['enabled'] = array();
+		$t_sort_fields['protected'] = array();
+		$t_sort_fields['date_created'] = array();
+		$t_sort_fields['last_visit'] = array();
+
+		foreach( $t_sort_fields AS $t_key=>$t_value ) {
+			$t_label = lang_get( $t_key );
+			if( self::$sort_column == $t_key ) {
+				# this is the same as the previous sort, swap directions
+				$t_sort_direction = ( self::$sort_direction == 'ASC' ? 'DESC' : 'ASC' );
+				$t_icon_path = config_get( 'icon_path' );
+				$t_sort_icon_arr = config_get( 'sort_icon_arr' );
+
+				$t_direction = ( self::$sort_direction == 'ASC' ? ASCENDING : DESCENDING );
+
+				$t_sort_icon = $t_icon_path . $t_sort_icon_arr[$t_direction];
+				$t_sort_alt = $t_label . ' ' . self::$sort_direction;
+			} else {
+				# set the default direction
+				$t_sort_direction = 'ASC';
+				$t_sort_icon = false;
+			}
+			$t_url = "manage_user_page.php?sort_column=" . $t_key . "&sort_direction=" . $t_sort_direction . "&save=1&hide_inactive=" . self::$hide_inactive . "&filter=" . self::$filter;
+			$t_sort_fields[$t_key] = array( 'field'=>$t_key, 'url'=>$t_url, 'label'=>$t_label, 'icon_url'=>$t_sort_icon, 'sort_alt'=>$t_sort_alt );
+		}
+		return $t_sort_fields;
+	}
+
+	/**
+	 *	@todo This should probably be generalized to handle any pager but
+	 *		this is basically an example for generating paging links for a template
+	 */
+	public static function getManageUserPager( $p_start=1 ) {
+		# Check if we have more than one page, otherwise return without doing anything.
+		if( self::$page_count - 1 < 1 ) {
+			return false;
+		}
+
+		# Get localized strings
+		$t_first_label = lang_get( 'first' );
+		$t_last_label = lang_get( 'last' );
+		$t_prev_label = lang_get( 'prev' );
+		$t_next_label = lang_get( 'next' );
+		$t_page_link_count = 10;
+		$t_page = 'manage_user_page.php';
+		if( self::$filter !== 0 ) {
+			$t_url = "$t_page?filter=" . self::$filter . "&page_number=";
+		} else {
+			$t_url = "$t_page?page_number=";
+		}
+
+		if( self::$page_number == 1 ) {
+			$t_page_link_arr['first'] = array('url'=>false,'label'=>$t_first_label  );
+		} else {
+			$t_page_link_arr['first'] = array('url'=>$t_url . 1,'label'=>$t_first_label  );
+		}
+		$t_page_link_arr['prev'] = array('url'=>( self::$page_number - 1 ),'label'=>$t_prev_label  );
+
+		# Page numbers ...
+		$t_first_page = max( $p_start, self::$page_number - $t_page_link_count / 2 );
+		$t_first_page = min( $t_first_page, self::$page_count - $t_page_link_count );
+		$t_first_page = max( $t_first_page, $p_start );
+
+		if( self::$page_count > 10 && $t_first_page > 1 ) {
+			$t_page_link_arr['separator1'] = array('url'=>false,'label'=>' ... ');
+		}
+
+		$t_last_page = $t_first_page + $t_page_link_count;
+		$t_last_page = min( $t_last_page, self::$page_count);
+
+		for( $i = $t_first_page;$i <= $t_last_page;$i++ ) {
+			if( $i == self::$page_number ) {
+				$t_page_link_arr[$i] = array( 'url'=>false, 'label'=>$i ); # current. no url
+			} else {
+				$t_page_link_arr[$i] = array( 'url'=>$t_url . $i, 'label'=>$i );
+			}
+		}
+
+		if( self::$page_count > 10 && $t_last_page < self::$page_count ) {
+			$t_page_link_arr['separator2'] = array('url'=>false,'label'=>' ... ');
+		}
+
+		# Next and Last links
+		if( self::$page_number < self::$page_count ) {
+			$t_page_link_arr['next'] = array('url'=>$t_url. ( self::$page_number + 1 ),'label'=>$t_next_label  );
+			$t_page_link_arr['last'] = array('url'=>$t_url . self::$page_count ,'label'=>$t_last_label  );
+		} else {
+			# no link. just print the next label
+			$t_page_link_arr['next'] = array('url'=>false,'label'=>$t_next_label  );
+			$t_page_link_arr['last'] = array('url'=>false,'label'=>$t_last_label  );
+		}
+
+
+		return $t_page_link_arr;
+	}
+} # End of user class

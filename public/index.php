@@ -1,41 +1,50 @@
 <?php
 # MantisBT - A PHP based bugtracking system
 
-# MantisBT is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 2 of the License, or
-# (at your option) any later version.
-#
-# MantisBT is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with MantisBT.  If not, see <http://www.gnu.org/licenses/>.
+# @todo needs new license text
 
 /**
  * @package MantisBT
  * @copyright Copyright (C) 2000 - 2002  Kenzaburo Ito - kenito@300baud.org
  * @copyright Copyright (C) 2002 - 2011  MantisBT Team - mantisbt-dev@lists.sourceforge.net
  * @link http://www.mantisbt.org
- *
- * @uses core.php
- * @uses authentication_api.php
- * @uses config_api.php
- * @uses print_api.php
  */
 
 /**
- * MantisBT Core API's
- */
-require_once( 'core.php' );
-require_api( 'authentication_api.php' );
-require_api( 'config_api.php' );
-require_api( 'print_api.php' );
+ * Set the initial include_path. for performance
+ * reasons, it's best to move this to your web server configuration or php.ini
+ * for production.
+ */ set_include_path(implode(PATH_SEPARATOR, array(
+    realpath(dirname(__FILE__) . '/../library'),
+    get_include_path(),
+)));
 
-if ( auth_is_user_authenticated() ) {
-	print_header_redirect( config_get( 'default_home_page' ) );
-} else {
-	print_header_redirect( 'login_page.php' );
-}
+// Define absolute path to web directory.
+defined('ABSOLUTE_PATH')
+    || define('ABSOLUTE_PATH', realpath( dirname(__FILE__) ) );
+
+// Define path to application directory
+defined('LIBRARY_PATH')
+    || define('LIBRARY_PATH', realpath(dirname(__FILE__) . '/../library') );
+
+# Define path to application directory
+defined('APPLICATION_PATH')
+    || define('APPLICATION_PATH', realpath(dirname(__FILE__) . '/../application') );
+
+// Define path to configs directory
+defined('CONFIG_PATH')
+    || define('CONFIG_PATH', APPLICATION_PATH . DIRECTORY_SEPARATOR . 'configs' );
+
+// Define path to languages directory
+defined('LANGUAGES_PATH')
+    || define('LANGUAGES_PATH', realpath(dirname(__FILE__) . '/../languages') );
+
+# Define application environment
+defined('APPLICATION_ENV')
+    || define('APPLICATION_ENV', (getenv('APPLICATION_ENV') ? getenv('APPLICATION_ENV') : 'production'));
+
+require_once( APPLICATION_PATH . DIRECTORY_SEPARATOR . 'Autoloader.php' );
+spl_autoload_register( array( 'Autoloader', 'autoload' ) );
+
+// Create application, bootstrap, and run
+MantisBT::main();
